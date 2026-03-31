@@ -407,12 +407,8 @@ const firearmTo = r => ({
   permitDate: r.permit_date,
   permitNumber: r.permit_number,
   permitValidityText: r.permit_validity_text,
-  renewalPeriodText: r.renewal_period_text,
-  permitExpiry: r.permit_expiry,
-  permitIssuer: r.permit_issuer, safeStorage: r.safe_storage,
-  safetyTrainingDate: r.safety_training_date,
-  safetyTrainingCertNo: r.safety_training_cert_no,
-  inspectionDate: r.inspection_date,
+  renewalFrom: r.renewal_from,
+  renewalTo: r.renewal_to,
   notes: r.notes, userId: r.user_id
 })
 const firearmFrom = r => ({
@@ -424,12 +420,8 @@ const firearmFrom = r => ({
   permit_date: r.permitDate || null,
   permit_number: r.permitNumber,
   permit_validity_text: r.permitValidityText,
-  renewal_period_text: r.renewalPeriodText,
-  permit_expiry: r.permitExpiry || null,
-  permit_issuer: r.permitIssuer, safe_storage: r.safeStorage,
-  safety_training_date: r.safetyTrainingDate || null,
-  safety_training_cert_no: r.safetyTrainingCertNo,
-  inspection_date: r.inspectionDate || null,
+  renewal_from: r.renewalFrom || null,
+  renewal_to: r.renewalTo || null,
   notes: r.notes
 })
 export function useFirearms() {

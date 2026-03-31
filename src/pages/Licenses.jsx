@@ -386,9 +386,8 @@ const EMPTY_FIREARM = {
   caliber: '',
   originalPermitDate: '', originalPermitNumber: '',
   permitDate: '', permitNumber: '',
-  permitValidityText: '', renewalPeriodText: '',
-  permitExpiry: '', permitIssuer: '', safeStorage: '',
-  safetyTrainingDate: '', safetyTrainingCertNo: '', inspectionDate: '', notes: ''
+  permitValidityText: '', renewalFrom: '', renewalTo: '',
+  notes: ''
 }
 
 const TYPE_BADGE = {
@@ -446,7 +445,7 @@ function FirearmForm({ initial, onSave, onCancel }) {
         if (result.permitDate) set('permitDate', result.permitDate)
         if (result.permitNumber) set('permitNumber', result.permitNumber)
         if (result.permitValidityText) set('permitValidityText', result.permitValidityText)
-        if (result.renewalPeriodText) set('renewalPeriodText', result.renewalPeriodText)
+        // renewalPeriodText はテキストのみなので日付フィールドへの自動反映はしない
         setOcrMsg('✅ 銃諸元ページを読み取りました。内容を確認してください')
       } else if (result.page === 'holder') {
         setOcrMsg('ℹ️ 所持者情報ページです。「所持許可証」タブで登録してください')
@@ -535,8 +534,12 @@ function FirearmForm({ initial, onSave, onCancel }) {
           </label>
           <label className="block">
             <span className="text-xs text-gray-500 font-medium">原許可番号</span>
-            <input type="text" placeholder="例: 第220020009号" value={form.originalPermitNumber} onChange={e => set('originalPermitNumber', e.target.value)}
-              className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+            <div className="mt-1 flex items-center border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-amber-400">
+              <span className="px-2 text-sm text-gray-400 bg-gray-50 border-r select-none">第</span>
+              <input type="text" inputMode="numeric" pattern="[0-9]*" placeholder="220020009" value={form.originalPermitNumber} onChange={e => set('originalPermitNumber', e.target.value.replace(/[^0-9]/g, ''))}
+                className="flex-1 px-2 py-2 text-sm focus:outline-none" />
+              <span className="px-2 text-sm text-gray-400 bg-gray-50 border-l select-none">号</span>
+            </div>
           </label>
           <label className="block">
             <span className="text-xs text-gray-500 font-medium">許可年月日</span>
@@ -545,8 +548,12 @@ function FirearmForm({ initial, onSave, onCancel }) {
           </label>
           <label className="block">
             <span className="text-xs text-gray-500 font-medium">許可番号</span>
-            <input type="text" placeholder="例: 第220080423号" value={form.permitNumber} onChange={e => set('permitNumber', e.target.value)}
-              className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+            <div className="mt-1 flex items-center border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-amber-400">
+              <span className="px-2 text-sm text-gray-400 bg-gray-50 border-r select-none">第</span>
+              <input type="text" inputMode="numeric" pattern="[0-9]*" placeholder="220080423" value={form.permitNumber} onChange={e => set('permitNumber', e.target.value.replace(/[^0-9]/g, ''))}
+                className="flex-1 px-2 py-2 text-sm focus:outline-none" />
+              <span className="px-2 text-sm text-gray-400 bg-gray-50 border-l select-none">号</span>
+            </div>
           </label>
         </div>
         <label className="block">
@@ -554,51 +561,15 @@ function FirearmForm({ initial, onSave, onCancel }) {
           <input type="text" placeholder="例: 令和11年の誕生日まで" value={form.permitValidityText} onChange={e => set('permitValidityText', e.target.value)}
             className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
         </label>
-        <label className="block">
+        <div className="block">
           <span className="text-xs text-gray-500 font-medium">更新申請期間</span>
-          <input type="text" placeholder="例: 令和10年11月27日から令和10年12月27日まで" value={form.renewalPeriodText} onChange={e => set('renewalPeriodText', e.target.value)}
-            className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
-        </label>
-        <div className="grid grid-cols-2 gap-3">
-          <label className="block">
-            <span className="text-xs text-gray-500 font-medium">有効期限（日付）</span>
-            <input type="date" value={form.permitExpiry} onChange={e => set('permitExpiry', e.target.value)}
-              className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
-          </label>
-          <label className="block">
-            <span className="text-xs text-gray-500 font-medium">所轄警察署</span>
-            <input type="text" placeholder="例: 東京都公安委員会" value={form.permitIssuer} onChange={e => set('permitIssuer', e.target.value)}
-              className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
-          </label>
-        </div>
-      </div>
-
-      {/* 管理情報 */}
-      <label className="block">
-        <span className="text-xs text-gray-500 font-medium">保管場所</span>
-        <input type="text" placeholder="例: 専用ロッカー（スチール製）" value={form.safeStorage} onChange={e => set('safeStorage', e.target.value)}
-          className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
-      </label>
-
-      {/* 法令要件 */}
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-        <div className="text-xs font-semibold text-amber-700 mb-2">⚖️ 法令要件（銃砲刀剣類所持等取締法）</div>
-        <div className="grid grid-cols-2 gap-3">
-          <label className="block">
-            <span className="text-xs text-gray-500 font-medium">安全講習修了日</span>
-            <input type="date" value={form.safetyTrainingDate || ''} onChange={e => set('safetyTrainingDate', e.target.value)}
-              className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
-          </label>
-          <label className="block">
-            <span className="text-xs text-gray-500 font-medium">修了証番号</span>
-            <input type="text" placeholder="例: 安全-2024-001" value={form.safetyTrainingCertNo || ''} onChange={e => set('safetyTrainingCertNo', e.target.value)}
-              className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
-          </label>
-          <label className="block col-span-2">
-            <span className="text-xs text-gray-500 font-medium">猟銃定期検査 最終受検日（3年ごと義務）</span>
-            <input type="date" value={form.inspectionDate || ''} onChange={e => set('inspectionDate', e.target.value)}
-              className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
-          </label>
+          <div className="mt-1 flex items-center gap-2">
+            <input type="date" value={form.renewalFrom} onChange={e => set('renewalFrom', e.target.value)}
+              className="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+            <span className="text-xs text-gray-400 shrink-0">〜</span>
+            <input type="date" value={form.renewalTo} onChange={e => set('renewalTo', e.target.value)}
+              className="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+          </div>
         </div>
       </div>
 
@@ -616,20 +587,8 @@ function FirearmForm({ initial, onSave, onCancel }) {
 }
 
 function FirearmCard({ firearm, onEdit, onRemove }) {
-  const status = firearm.permitExpiry ? getStatus(firearm.permitExpiry) : null
   const borderColor = TYPE_BORDER[firearm.type] || 'border-l-gray-300'
-  const barColor = status ? { red: 'bg-red-500', amber: 'bg-amber-400', green: TYPE_BAR[firearm.type] || 'bg-amber-400' }[status.color] : (TYPE_BAR[firearm.type] || 'bg-gray-300')
-  // 安全講習の次回期限（3年）
-  const today = new Date().toISOString().split('T')[0]
-  const trainingNextDue = firearm.safetyTrainingDate
-    ? new Date(new Date(firearm.safetyTrainingDate).setFullYear(new Date(firearm.safetyTrainingDate).getFullYear() + 3)).toISOString().split('T')[0]
-    : null
-  const trainingStatus = trainingNextDue ? getStatus(trainingNextDue) : null
-  // 定期検査の次回期限（3年）
-  const inspectionNextDue = firearm.inspectionDate
-    ? new Date(new Date(firearm.inspectionDate).setFullYear(new Date(firearm.inspectionDate).getFullYear() + 3)).toISOString().split('T')[0]
-    : null
-  const inspectionStatus = inspectionNextDue ? getStatus(inspectionNextDue) : null
+  const barColor = TYPE_BAR[firearm.type] || 'bg-gray-300'
 
   return (
     <div className={`bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden border-l-4 ${borderColor}`}>
@@ -643,53 +602,25 @@ function FirearmCard({ firearm, onEdit, onRemove }) {
               <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${TYPE_BADGE[firearm.type] || TYPE_BADGE['その他']}`}>
                 {firearm.type}
               </span>
-              {status && <StatusBadge status={status} />}
             </div>
             <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
               {firearm.manufacturer && firearm.model && (
                 <InfoRow icon={Building2} label="製造" value={`${firearm.manufacturer} ${firearm.model}`} />
               )}
               {firearm.caliber && <InfoRow icon={Crosshair} label="口径" value={firearm.caliber} />}
-              {firearm.serialNumber && <InfoRow icon={Hash} label="製造番号" value={firearm.serialNumber} />}
+              {firearm.serialNumber && <InfoRow icon={Hash} label="銃番号" value={firearm.serialNumber} />}
               {firearm.mechanism && <InfoRow icon={ClipboardList} label="型式" value={firearm.mechanism} />}
+              {firearm.originalPermitDate && <InfoRow icon={Calendar} label="原許可日" value={firearm.originalPermitDate} />}
+              {firearm.originalPermitNumber && <InfoRow icon={Hash} label="原許可番号" value={`第${firearm.originalPermitNumber}号`} />}
               {firearm.permitDate && <InfoRow icon={Calendar} label="許可年月日" value={firearm.permitDate} />}
-              {firearm.permitNumber && <InfoRow icon={Hash} label="許可番号" value={firearm.permitNumber} />}
+              {firearm.permitNumber && <InfoRow icon={Hash} label="許可番号" value={`第${firearm.permitNumber}号`} />}
               {firearm.permitValidityText && <InfoRow icon={Shield} label="有効期間" value={firearm.permitValidityText} />}
-              {firearm.renewalPeriodText && <InfoRow icon={Calendar} label="更新申請期間" value={firearm.renewalPeriodText} color="text-amber-500" />}
-              {firearm.permitExpiry && (
-                <InfoRow icon={Calendar} label="許可有効期限" value={firearm.permitExpiry}
-                  color={status?.color === 'red' ? 'text-red-500' : 'text-gray-400'} />
-              )}
-              {firearm.permitIssuer && <InfoRow icon={MapPin} label="所轄警察署" value={firearm.permitIssuer} />}
-              {firearm.safeStorage && <InfoRow icon={Lock} label="保管場所" value={firearm.safeStorage} />}
-              {firearm.safetyTrainingDate && (
-                <InfoRow icon={Shield} label="安全講習修了日" value={firearm.safetyTrainingDate}
-                  color={trainingStatus?.color === 'red' ? 'text-red-500' : trainingStatus?.color === 'amber' ? 'text-amber-500' : 'text-gray-400'} />
-              )}
-              {trainingNextDue && (
-                <InfoRow icon={Calendar} label="次回講習期限" value={trainingNextDue}
-                  color={trainingStatus?.color === 'red' ? 'text-red-500' : trainingStatus?.color === 'amber' ? 'text-amber-500' : 'text-gray-400'} />
-              )}
-              {firearm.inspectionDate && (
-                <InfoRow icon={Shield} label="定期検査 最終受検" value={firearm.inspectionDate}
-                  color={inspectionStatus?.color === 'red' ? 'text-red-500' : inspectionStatus?.color === 'amber' ? 'text-amber-500' : 'text-gray-400'} />
-              )}
-              {inspectionNextDue && (
-                <InfoRow icon={Calendar} label="次回検査期限" value={inspectionNextDue}
-                  color={inspectionStatus?.color === 'red' ? 'text-red-500' : inspectionStatus?.color === 'amber' ? 'text-amber-500' : 'text-gray-400'} />
+              {(firearm.renewalFrom || firearm.renewalTo) && (
+                <InfoRow icon={Calendar} label="更新申請期間"
+                  value={`${firearm.renewalFrom || ''}〜${firearm.renewalTo || ''}`}
+                  color="text-amber-500" />
               )}
             </div>
-            {/* 法令アラート */}
-            {(!firearm.safetyTrainingDate || !firearm.inspectionDate) && (
-              <div className="mt-2 text-xs bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 text-amber-700 flex items-start gap-1.5">
-                <AlertTriangle size={11} className="mt-0.5 shrink-0" />
-                <span>
-                  {!firearm.safetyTrainingDate && '安全講習修了証を登録してください。'}
-                  {!firearm.safetyTrainingDate && !firearm.inspectionDate && ' '}
-                  {!firearm.inspectionDate && '定期検査の受検記録を登録してください。'}
-                </span>
-              </div>
-            )}
             {firearm.notes && (
               <div className="mt-2 text-xs text-gray-500 bg-gray-50 rounded-lg px-2.5 py-1.5 flex items-start gap-1">
                 <StickyNote size={11} className="mt-0.5 shrink-0 text-gray-400" /> {firearm.notes}
