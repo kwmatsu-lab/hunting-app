@@ -1,7 +1,25 @@
 import { useState } from 'react'
-import { Settings as SettingsIcon, Key, Eye, EyeOff, Check } from 'lucide-react'
+import { Settings as SettingsIcon, Key, Eye, EyeOff, Check, User } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
 
 export default function Settings() {
+  const { profile, updateProfile } = useAuth()
+  const [displayName, setDisplayName] = useState(profile?.display_name || '')
+  const [nameSaved, setNameSaved] = useState(false)
+  const [nameError, setNameError] = useState('')
+
+  async function handleNameSave() {
+    if (!displayName.trim()) { setNameError('名前を入力してください'); return }
+    try {
+      await updateProfile(displayName.trim())
+      setNameSaved(true)
+      setNameError('')
+      setTimeout(() => setNameSaved(false), 2000)
+    } catch {
+      setNameError('保存に失敗しました')
+    }
+  }
+
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('anthropic_api_key') || '')
   const [show, setShow] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -21,6 +39,28 @@ export default function Settings() {
       <h1 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
         <SettingsIcon className="text-gray-500" size={24} /> 設定
       </h1>
+
+      {/* アカウント名 */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-4">
+        <h2 className="font-semibold text-gray-700 flex items-center gap-2 mb-1">
+          <User size={16} className="text-indigo-500" /> アカウント名
+        </h2>
+        <p className="text-xs text-gray-500 mb-4">
+          猟隊のメンバー一覧などに表示される名前です。
+        </p>
+        <input
+          type="text"
+          value={displayName}
+          onChange={e => setDisplayName(e.target.value)}
+          placeholder="表示名を入力"
+          className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+        />
+        {nameError && <p className="text-xs text-red-500 mt-1">{nameError}</p>}
+        <button onClick={handleNameSave}
+          className={`mt-3 flex items-center gap-2 px-4 py-2 text-sm rounded-lg font-medium transition-colors ${nameSaved ? 'bg-green-500 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}>
+          {nameSaved ? <><Check size={15} /> 保存しました</> : '保存'}
+        </button>
+      </div>
 
       {/* Anthropic API Key */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
