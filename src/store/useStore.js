@@ -401,18 +401,54 @@ export function useHuntingTeams() {
 const firearmTo = r => ({
   id: r.id, name: r.name, type: r.type, manufacturer: r.manufacturer,
   model: r.model, serialNumber: r.serial_number, caliber: r.caliber,
-  permitNumber: r.permit_number, permitExpiry: r.permit_expiry,
+  mechanism: r.mechanism,
+  originalPermitDate: r.original_permit_date,
+  originalPermitNumber: r.original_permit_number,
+  permitDate: r.permit_date,
+  permitNumber: r.permit_number,
+  permitValidityText: r.permit_validity_text,
+  renewalPeriodText: r.renewal_period_text,
+  permitExpiry: r.permit_expiry,
   permitIssuer: r.permit_issuer, safeStorage: r.safe_storage,
+  safetyTrainingDate: r.safety_training_date,
+  safetyTrainingCertNo: r.safety_training_cert_no,
+  inspectionDate: r.inspection_date,
   notes: r.notes, userId: r.user_id
 })
 const firearmFrom = r => ({
   name: r.name, type: r.type, manufacturer: r.manufacturer, model: r.model,
   serial_number: r.serialNumber, caliber: r.caliber,
-  permit_number: r.permitNumber, permit_expiry: r.permitExpiry,
-  permit_issuer: r.permitIssuer, safe_storage: r.safeStorage, notes: r.notes
+  mechanism: r.mechanism,
+  original_permit_date: r.originalPermitDate || null,
+  original_permit_number: r.originalPermitNumber,
+  permit_date: r.permitDate || null,
+  permit_number: r.permitNumber,
+  permit_validity_text: r.permitValidityText,
+  renewal_period_text: r.renewalPeriodText,
+  permit_expiry: r.permitExpiry || null,
+  permit_issuer: r.permitIssuer, safe_storage: r.safeStorage,
+  safety_training_date: r.safetyTrainingDate || null,
+  safety_training_cert_no: r.safetyTrainingCertNo,
+  inspection_date: r.inspectionDate || null,
+  notes: r.notes
 })
 export function useFirearms() {
   return useTable('firearms', firearmTo, firearmFrom)
+}
+
+// ── 所持許可証 ─────────────────────────────────────────────────
+const permitBookTo = r => ({
+  id: r.id, bookNumber: r.book_number,
+  originalIssueDate: r.original_issue_date,
+  issueDate: r.issue_date, userId: r.user_id
+})
+const permitBookFrom = r => ({
+  book_number: r.bookNumber,
+  original_issue_date: r.originalIssueDate || null,
+  issue_date: r.issueDate || null,
+})
+export function usePermitBooks() {
+  return useTable('permit_books', permitBookTo, permitBookFrom)
 }
 
 // ── 狩猟登録 ───────────────────────────────────────────────
