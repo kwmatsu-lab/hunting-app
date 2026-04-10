@@ -64,15 +64,22 @@ function LicenseForm({ initial, onSave, onCancel }) {
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
   return (
-    <form onSubmit={e => { e.preventDefault(); onSave(form) }} className="space-y-3">
-      <label className="block">
+    <form onSubmit={e => { e.preventDefault(); if (!form.name) return; onSave(form) }} className="space-y-3">
+      <div className="block">
         <span className="text-xs text-gray-500 font-medium">免許種別 *</span>
-        <select required value={form.name} onChange={e => set('name', e.target.value)}
-          className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400">
-          <option value="">選択してください</option>
-          {LICENSE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-        </select>
-      </label>
+        <div className="flex flex-wrap gap-2 mt-1.5">
+          {LICENSE_TYPES.map(t => (
+            <button key={t} type="button" onClick={() => set('name', form.name === t ? '' : t)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-all ${
+                form.name === t
+                  ? 'bg-emerald-100 text-emerald-700 border-transparent ring-2 ring-offset-1 ring-emerald-400'
+                  : 'border-gray-200 text-gray-500 hover:border-gray-300 bg-white'
+              }`}>
+              {t}
+            </button>
+          ))}
+        </div>
+      </div>
       <label className="block">
         <span className="text-xs text-gray-500 font-medium">免許番号</span>
         <input type="text" placeholder="例: 北海01-12345" value={form.licenseNumber} onChange={e => set('licenseNumber', e.target.value)}
