@@ -134,13 +134,25 @@ const DISC_LABELS = {
 
 // ── 射撃成績タブ ─────────────────────────────────────────────
 function ShootingTab({ records, selectedName }) {
-  const scored = records.filter(r => r.score != null).map(r => ({ ...r, score: Number(r.score) }))
+  const [discFilter, setDiscFilter] = useState('all')
+
+  // 種目一覧を抽出
+  const disciplines = useMemo(() => {
+    const set = new Set()
+    records.forEach(r => { if (r.discipline) set.add(r.discipline) })
+    return Array.from(set).sort()
+  }, [records])
+
+  // フィルタ適用
+  const filtered = discFilter === 'all' ? records : records.filter(r => r.discipline === discFilter)
+
+  const scored = filtered.filter(r => r.score != null).map(r => ({ ...r, score: Number(r.score) }))
   const scores = scored.map(r => r.score)
   const avgScore   = scores.length ? avg(scores).toFixed(1) : null
   const bestScore  = scores.length ? Math.max(...scores) : null
   const sd         = stdDev(scores)
   const dir        = trendDir(scores)
-  const totalRounds = records.reduce((s, r) => s + Number(r.rounds || 0), 0)
+  const totalRounds = filtered.reduce((s, r) => s + Number(r.rounds || 0), 0)
 
   // 直近5回 vs 全体平均
   const recentScores = scores.slice(-5)
@@ -150,7 +162,7 @@ function ShootingTab({ records, selectedName }) {
 
   // 1矢率（score_detailから）
   let firstHits = 0, totalHits = 0
-  records.forEach(r => {
+  filtered.forEach(r => {
     const sd = r.score_detail
     if (!sd) return
     if (sd.type === 'trap' && sd.shots) {
@@ -180,7 +192,7 @@ function ShootingTab({ records, selectedName }) {
   })).sort((a, b) => b.count - a.count)
 
   const trendData   = scored.map(r => ({ date: r.date, score: r.score }))
-  const monthlyData = groupByMonth(records.filter(r => r.score != null), 'score')
+  const monthlyData = groupByMonth(filtered.filter(r => r.score != null), 'score')
 
   const buckets = {}
   scored.forEach(r => {
@@ -192,9 +204,32 @@ function ShootingTab({ records, selectedName }) {
 
   return (
     <div className="space-y-5">
+      {/* 種目フィルター */}
+      {disciplines.length > 1 && (
+        <div>
+          <span className="text-xs text-gray-500 font-medium mr-2">種目:</span>
+          <div className="inline-flex flex-wrap gap-1.5 mt-1">
+            <button onClick={() => setDiscFilter('all')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-all ${
+                discFilter === 'all'
+                  ? 'bg-blue-100 text-blue-700 border-transparent ring-2 ring-offset-1 ring-blue-400'
+                  : 'border-gray-200 text-gray-500 hover:border-gray-300 bg-white'
+              }`}>全種目</button>
+            {disciplines.map(d => (
+              <button key={d} onClick={() => setDiscFilter(d)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-all ${
+                  discFilter === d
+                    ? 'bg-blue-100 text-blue-700 border-transparent ring-2 ring-offset-1 ring-blue-400'
+                    : 'border-gray-200 text-gray-500 hover:border-gray-300 bg-white'
+                }`}>{DISC_LABELS[d] || d}</button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* サマリー */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <StatBox label="セッション数" value={records.length} />
+        <StatBox label="セッション数" value={filtered.length} />
         <StatBox label="平均スコア" value={avgScore} color="text-blue-600" icon={<TrendIcon dir={dir} />} />
         <StatBox label="自己ベスト" value={bestScore} color="text-green-600" />
         <StatBox
