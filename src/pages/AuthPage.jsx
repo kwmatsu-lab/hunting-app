@@ -77,17 +77,17 @@ export default function AuthPage() {
               <Target className="text-white" size={24} />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white leading-tight">狩猟・射撃管理</h1>
-              <p className="text-emerald-300/70 text-xs">チームで記録・分析するアプリ</p>
+              <h1 className="text-xl font-bold text-white leading-tight">狩りメモ</h1>
+              <p className="text-emerald-300/70 text-xs">狩猟・射撃をチームで記録・分析</p>
             </div>
           </div>
 
           <h2 className="text-3xl lg:text-4xl font-bold text-white mb-3 leading-snug drop-shadow-lg">
-            狩猟をもっと<br />スマートに管理する
+            狩猟・射撃を<br />もっとスマートに
           </h2>
           <p className="text-emerald-100/80 text-sm mb-10 leading-relaxed max-w-md">
-            狩猟記録・チーム管理・免許証の有効期限・射撃記録まで、
-            すべてをひとつのアプリで。AI解析で記録の手間を最小限に。
+            狩猟記録・射撃記録・チーム管理・免許証の有効期限まで、
+            すべてをひとつのアプリで。記録の手間を最小限に。
           </p>
 
           {/* 機能一覧 */}

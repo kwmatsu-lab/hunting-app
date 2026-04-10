@@ -45,8 +45,8 @@ export default function Layout({ children }) {
               <Target size={18} className="text-white" />
             </div>
             <div>
-              <div className="text-white font-bold text-sm leading-tight">狩猟・射撃</div>
-              <div className="text-emerald-400/60 text-xs leading-tight">管理アプリ</div>
+              <div className="text-white font-bold text-sm leading-tight">狩りメモ</div>
+              <div className="text-emerald-400/60 text-xs leading-tight">狩猟・射撃管理</div>
             </div>
           </div>
         </div>
@@ -110,7 +110,7 @@ export default function Layout({ children }) {
             style={{ background: 'linear-gradient(135deg, #059669 0%, #047857 100%)' }}>
             <Target size={14} className="text-white" />
           </div>
-          <span className="font-bold text-sm">狩猟・射撃管理</span>
+          <span className="font-bold text-sm">狩りメモ</span>
         </div>
         <button onClick={() => setMobileOpen(!mobileOpen)} className="text-stone-300 hover:text-white">
           {mobileOpen ? <X size={22} /> : <Menu size={22} />}
