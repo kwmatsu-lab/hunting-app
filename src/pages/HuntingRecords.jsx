@@ -207,7 +207,6 @@ function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, fire
   const [showMapPicker, setShowMapPicker] = useState(!!(initial?.latitude))
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
-  const isGroupHunt = form.method === '巻き狩り'
 
   // 既存記録の捕獲・目撃を読み込む
   useEffect(() => {
@@ -417,7 +416,7 @@ function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, fire
             {HUNT_TYPE_OPTIONS.map(t => (
               <button
                 key={t} type="button"
-                onClick={() => { set('method', t); if (t !== '巻き狩り') set('teamId', '') }}
+                onClick={() => set('method', t)}
                 className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-all ${
                   form.method === t
                     ? `${HUNT_TYPE_STYLE[t] || 'bg-gray-200 text-gray-700'} border-transparent ring-2 ring-offset-1 ring-indigo-400`
@@ -441,11 +440,10 @@ function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, fire
           </button>
         </div>
 
-        {/* 巻き狩り時：チーム選択 */}
-        {isGroupHunt && (
-          <div className="space-y-2 border-t border-indigo-200 pt-3">
+        {/* チーム選択 */}
+        <div className="space-y-2 border-t border-indigo-200 pt-3">
             <div className="text-xs font-semibold text-indigo-700 flex items-center gap-1.5">
-              <Users2 size={12} /> 猟隊連携（巻き狩り）
+              <Users2 size={12} /> 猟隊連携
             </div>
             <label className="block">
               <span className="text-xs text-gray-500 font-medium">猟隊を選択</span>
@@ -461,7 +459,6 @@ function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, fire
               </div>
             )}
           </div>
-        )}
 
         {/* 使用銃器 */}
         <div className="border-t border-indigo-200 pt-3">
@@ -491,12 +488,12 @@ function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, fire
           <span className="text-xs font-semibold text-green-800 flex items-center gap-1.5">
             <TreePine size={13} /> 捕獲記録（時刻別）
           </span>
-          {isGroupHunt && form.teamId && (
+          {form.teamId && teamMembers.length > 0 && (
             <span className="text-xs text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full">
               射手記録モード
             </span>
           )}
-          {catches.length === 0 && !isGroupHunt && (
+          {catches.length === 0 && !form.teamId && (
             <span className="text-xs text-gray-400">登録なし → 手入力モード</span>
           )}
         </div>
@@ -511,7 +508,7 @@ function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, fire
                 onChange={(f, v) => updateCatch(c._key, f, v)}
                 onRemove={() => setCatches(prev => prev.filter(x => x._key !== c._key))}
                 teamMembers={teamMembers}
-                isGroupHunt={isGroupHunt && !!form.teamId}
+                isGroupHunt={!!form.teamId}
               />
             ))}
 
