@@ -252,8 +252,12 @@ function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, fire
 
   function handleSubmit(e) {
     e.preventDefault()
+    const rawFirearmId = form.firearmId?.includes('__bar__')
+      ? form.firearmId.split('__bar__')[0]
+      : form.firearmId
     onSave({
       ...form,
+      firearmId: rawFirearmId || null,
       game: effectiveGame,
       count: effectiveCount,
       ammoName: selectedAmmo?.name || form.ammoUsed || null,
@@ -415,9 +419,14 @@ function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, fire
             <select value={form.firearmId} onChange={e => set('firearmId', e.target.value)}
               className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400">
               <option value="">選択してください</option>
-              {firearms.map(f => (
-                <option key={f.id} value={f.id}>{f.name} ({f.caliber})</option>
-              ))}
+              {firearms.flatMap(f => [
+                <option key={f.id} value={f.id}>{f.name}（{f.type}）</option>,
+                ...(f.alternateBars || []).map((bar, i) => (
+                  <option key={`${f.id}__bar__${i}`} value={`${f.id}__bar__${i}`}>
+                    {f.name}（{bar.type || '替え銃身'}）
+                  </option>
+                ))
+              ])}
             </select>
           </label>
         </div>

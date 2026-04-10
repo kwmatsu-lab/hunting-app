@@ -702,8 +702,22 @@ function RecordForm({ initial, onSave, onCancel, ammoItems, firearms, ranges }) 
   function handleSubmit(e) {
     e.preventDefault()
     const ammoObj = ammoItems.find(a => a.id === form.ammoInventoryId)
+    let firearmId = form.firearmId || null
+    let firearmLabel = null
+    if (form.firearmId?.includes('__bar__')) {
+      const [fid, barIdx] = form.firearmId.split('__bar__')
+      firearmId = fid
+      const parent = firearms.find(f => f.id === fid)
+      const bar = parent?.alternateBars?.[Number(barIdx)]
+      firearmLabel = parent ? `${parent.name}（${bar?.type || '替え銃身'}）` : null
+    } else if (form.firearmId) {
+      const f = firearms.find(f => f.id === form.firearmId)
+      if (f) firearmLabel = `${f.name}（${f.type}）`
+    }
     onSave({
       ...form,
+      firearmId,
+      firearm: firearmLabel,
       score: displayScore,
       scoreDetail: form.scoreDetail,
       ammoName: ammoObj?.name || form.ammoName || null,
@@ -753,7 +767,14 @@ function RecordForm({ initial, onSave, onCancel, ammoItems, firearms, ranges }) 
           <select value={form.firearmId} onChange={e => set('firearmId', e.target.value)}
             className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
             <option value="">選択（任意）</option>
-            {firearms.map(f => <option key={f.id} value={f.id}>{f.name}{f.caliber ? ` [${f.caliber}]` : ''}</option>)}
+            {firearms.flatMap(f => [
+              <option key={f.id} value={f.id}>{f.name}（{f.type}）</option>,
+              ...(f.alternateBars || []).map((bar, i) => (
+                <option key={`${f.id}__bar__${i}`} value={`${f.id}__bar__${i}`}>
+                  {f.name}（{bar.type || '替え銃身'}）
+                </option>
+              ))
+            ])}
           </select>
         </label>
       </div>
