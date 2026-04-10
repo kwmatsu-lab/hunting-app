@@ -246,14 +246,25 @@ function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, fire
   // チーム変更時にメンバーを取得
   useEffect(() => {
     if (!form.teamId) { setTeamMembers([]); return }
-    supabase.from('team_members')
-      .select('user_id, profiles(display_name)')
-      .eq('team_id', form.teamId)
-      .then(({ data }) => {
-        setTeamMembers((data || []).map(m => ({
-          userId: m.user_id,
-          displayName: m.profiles?.display_name || '不明',
-        })))
+    supabase.rpc('get_team_members_by_team', { p_team_id: form.teamId })
+      .then(({ data, error }) => {
+        if (!error && data) {
+          setTeamMembers(data.map(m => ({
+            userId: m.user_id,
+            displayName: m.display_name || '不明',
+          })))
+        } else {
+          // フォールバック: 直接クエリ
+          supabase.from('team_members')
+            .select('user_id, profiles(display_name)')
+            .eq('team_id', form.teamId)
+            .then(({ data: d2 }) => {
+              setTeamMembers((d2 || []).map(m => ({
+                userId: m.user_id,
+                displayName: m.profiles?.display_name || '不明',
+              })))
+            })
+        }
       })
   }, [form.teamId])
 
@@ -495,8 +506,11 @@ function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, fire
               射手記録モード
             </span>
           )}
-          {catches.length === 0 && !form.teamId && (
-            <span className="text-xs text-gray-400">登録なし → 手入力モード</span>
+          {catches.length === 0 && (
+            <span className="text-xs text-gray-400">サマリー入力</span>
+          )}
+          {catches.length > 0 && (
+            <span className="text-xs text-green-600">{catches.length}件の詳細記録</span>
           )}
         </div>
 
@@ -546,10 +560,18 @@ function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, fire
             {catches.length > 0 && (
               <div className="text-xs text-green-700 font-medium">合計: {catchTotal}頭</div>
             )}
-            <button type="button" onClick={() => setCatches(prev => [...prev, EMPTY_CATCH()])}
-              className="w-full py-1.5 text-xs text-green-700 border border-green-300 border-dashed rounded-lg hover:bg-green-100 transition-colors">
-              + 捕獲を追加
-            </button>
+            {catches.length === 0 && (
+              <button type="button" onClick={() => setCatches(prev => [...prev, EMPTY_CATCH()])}
+                className="w-full py-2 text-xs text-green-700 bg-white border border-green-300 rounded-lg hover:bg-green-100 transition-colors flex items-center justify-center gap-1.5">
+                <Clock size={11} /> 詳細入力モード（時刻・場所・射手を個別に記録）
+              </button>
+            )}
+            {catches.length > 0 && (
+              <button type="button" onClick={() => setCatches(prev => [...prev, EMPTY_CATCH()])}
+                className="w-full py-1.5 text-xs text-green-700 border border-green-300 border-dashed rounded-lg hover:bg-green-100 transition-colors">
+                + 捕獲を追加
+              </button>
+            )}
           </>
         )}
       </div>

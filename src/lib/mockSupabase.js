@@ -367,6 +367,21 @@ function mockRpc(name, params) {
   const profile = db.profiles.find(p => p.id === userId)
   const isAdmin = profile?.is_admin === true
 
+  if (name === 'get_team_members_by_team') {
+    const teamId = params?.p_team_id
+    if (!teamId) return Promise.resolve({ data: [], error: null })
+    // ユーザーがそのチームのメンバーか確認
+    const isMember = db.team_members.some(m => m.team_id === teamId && m.user_id === userId)
+    if (!isMember) return Promise.resolve({ data: [], error: null })
+    const members = db.team_members
+      .filter(m => m.team_id === teamId)
+      .map(m => {
+        const p = db.profiles.find(pr => pr.id === m.user_id)
+        return { user_id: m.user_id, display_name: p?.display_name || '不明', role: m.role }
+      })
+    return Promise.resolve({ data: members, error: null })
+  }
+
   if (name === 'get_all_profiles') {
     if (!isAdmin) return Promise.resolve({ data: null, error: { message: '権限がありません' } })
     return Promise.resolve({ data: [], error: null })
