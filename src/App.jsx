@@ -13,6 +13,8 @@ import HuntingGrounds from './pages/HuntingGrounds'
 import Settings from './pages/Settings'
 import Teams from './pages/Teams'
 import AdminPage from './pages/AdminPage'
+import PrivacyPolicy from './pages/PrivacyPolicy'
+import TermsOfService from './pages/TermsOfService'
 import './index.css'
 
 function AppRoutes() {
@@ -42,6 +44,8 @@ function AppRoutes() {
         <Route path="/stats"    element={<Statistics />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/admin"    element={<AdminPage />} />
+        <Route path="/privacy"  element={<PrivacyPolicy />} />
+        <Route path="/terms"    element={<TermsOfService />} />
         <Route path="*"         element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>

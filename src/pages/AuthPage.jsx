@@ -227,6 +227,10 @@ export default function AuthPage() {
               デモモード：データはブラウザのセッション内のみに保存されます
             </p>
           )}
+          <div className="flex justify-center gap-4 mt-4">
+            <a href="/privacy" target="_blank" className="text-xs text-stone-400 hover:text-stone-600 hover:underline">プライバシーポリシー</a>
+            <a href="/terms" target="_blank" className="text-xs text-stone-400 hover:text-stone-600 hover:underline">利用規約</a>
+          </div>
         </div>
       </div>
     </div>

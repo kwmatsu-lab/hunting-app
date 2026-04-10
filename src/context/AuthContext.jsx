@@ -53,10 +53,26 @@ export function AuthProvider({ children }) {
     setProfile(p => ({ ...p, display_name: displayName }))
   }
 
+  async function deleteAccount() {
+    if (!user) return
+    // ユーザーの全データを削除（RLSにより自分のデータのみ）
+    const tables = [
+      'hunting_catches', 'hunting_sightings', 'hunting_records',
+      'shooting_records', 'team_members', 'firearms',
+      'ammo_inventory', 'ammo_ledger', 'licenses',
+      'hunting_registrations', 'permit_books', 'hunting_grounds', 'shooting_ranges',
+    ]
+    for (const table of tables) {
+      await supabase.from(table).delete().eq('user_id', user.id)
+    }
+    await supabase.from('profiles').delete().eq('id', user.id)
+    await supabase.auth.signOut()
+  }
+
   const isAdmin = profile?.is_admin === true
 
   return (
-    <AuthContext.Provider value={{ user, profile, isAdmin, signUp, signIn, signOut, updateProfile }}>
+    <AuthContext.Provider value={{ user, profile, isAdmin, signUp, signIn, signOut, updateProfile, deleteAccount }}>
       {children}
     </AuthContext.Provider>
   )
