@@ -11,7 +11,7 @@ import MapPicker from '../components/MapPicker'
 import HuntingRecordMap from '../components/HuntingRecordMap'
 
 const GAME_OPTIONS = ['イノシシ', 'シカ', 'タヌキ', 'キジ', 'カモ', 'クマ', 'サル', 'その他']
-const HUNT_TYPE_OPTIONS = ['単独忍び猟', '巻き狩り', '待ち猟', '流し猟', 'トラップ', 'その他']
+const HUNT_TYPE_OPTIONS = ['単独忍び猟', '巻き狩り', '待ち猟', '流し猟', 'その他']
 const WEATHER_OPTIONS = ['晴れ', '曇り', '雨', '雪', '霧']
 
 // 猟法タイプに対応するバッジスタイル
@@ -20,14 +20,13 @@ const HUNT_TYPE_STYLE = {
   '巻き狩り':   'bg-purple-100 text-purple-700',
   '待ち猟':     'bg-blue-100 text-blue-700',
   '流し猟':     'bg-teal-100 text-teal-700',
-  'トラップ':   'bg-orange-100 text-orange-700',
   'その他':     'bg-gray-100 text-gray-600',
 }
 
 const EMPTY_CATCH = () => ({
   _key: Date.now() + Math.random(),
   catchTime: '', game: '', count: 1, notes: '', shooterUserId: '',
-  catchLat: null, catchLng: null,
+  catchLat: null, catchLng: null, catchLocation: '',
 })
 
 const EMPTY_SIGHTING = () => ({
@@ -43,9 +42,43 @@ function CatchRow({ c, onChange, onRemove, teamMembers, isGroupHunt }) {
   return (
     <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
       <div className="px-3 py-2 space-y-2">
+        {/* 獲物選択 */}
+        <div className="flex items-center justify-between">
+          <div className="flex flex-wrap gap-1.5 flex-1">
+            {GAME_OPTIONS.map(g => (
+              <button key={g} type="button" onClick={() => onChange('game', g)}
+                className={`px-2 py-1 text-xs rounded-full border transition-all ${
+                  c.game === g
+                    ? 'bg-green-100 text-green-700 border-transparent ring-1 ring-green-400'
+                    : 'border-gray-200 text-gray-400 hover:border-gray-300 bg-white'
+                }`}>
+                {g}
+              </button>
+            ))}
+          </div>
+          <button type="button" onClick={onRemove} className="text-gray-300 hover:text-red-400 shrink-0 text-base leading-none ml-2">×</button>
+        </div>
+        {/* 頭数 */}
         <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">頭数:</span>
+          <button type="button" onClick={() => onChange('count', Math.max(1, Number(c.count) - 1))}
+            className="w-6 h-6 rounded-full border border-gray-300 text-gray-500 hover:bg-gray-100 flex items-center justify-center text-sm font-bold">−</button>
+          <span className="text-sm font-bold text-stone-800 w-5 text-center">{c.count}</span>
+          <button type="button" onClick={() => onChange('count', Number(c.count) + 1)}
+            className="w-6 h-6 rounded-full border border-green-300 text-green-700 hover:bg-green-100 flex items-center justify-center text-sm font-bold">+</button>
+        </div>
+        {/* 任意：時刻・場所・射手・メモ */}
+        <div className="flex items-center gap-2 flex-wrap">
           <input type="time" value={c.catchTime} onChange={e => onChange('catchTime', e.target.value)}
+            placeholder="時刻"
             className="border border-gray-200 rounded-md bg-transparent text-xs font-mono w-20 px-1.5 py-1 focus:outline-none shrink-0" />
+          <input type="text" placeholder="場所（任意）" value={c.catchLocation || ''} onChange={e => onChange('catchLocation', e.target.value)}
+            className="border border-gray-200 rounded-md bg-transparent text-xs px-1.5 py-1 focus:outline-none flex-1 min-w-[80px]" />
+          <button type="button" onClick={() => setShowMap(m => !m)}
+            title="捕獲地点を地図で指定"
+            className={`shrink-0 p-1 rounded transition-colors ${hasLocation ? 'text-green-600 bg-green-50' : 'text-gray-300 hover:text-green-500'}`}>
+            <MapPin size={13} />
+          </button>
 
           {/* 巻き狩り時：射手選択 */}
           {isGroupHunt && teamMembers.length > 0 && (
@@ -57,36 +90,10 @@ function CatchRow({ c, onChange, onRemove, teamMembers, isGroupHunt }) {
               ))}
             </select>
           )}
-
-          <input type="text" placeholder="メモ" value={c.notes} onChange={e => onChange('notes', e.target.value)}
-            className="border-0 bg-transparent text-xs flex-1 focus:outline-none text-gray-500 min-w-[60px]" />
-          <button type="button" onClick={() => setShowMap(m => !m)}
-            title="捕獲地点を地図で指定"
-            className={`shrink-0 p-1 rounded transition-colors ${hasLocation ? 'text-green-600 bg-green-50' : 'text-gray-300 hover:text-green-500'}`}>
-            <MapPin size={13} />
-          </button>
-          <button type="button" onClick={onRemove} className="text-gray-300 hover:text-red-400 shrink-0 text-base leading-none">×</button>
         </div>
-        <div className="flex flex-wrap gap-1.5">
-          {GAME_OPTIONS.map(g => (
-            <button key={g} type="button" onClick={() => onChange('game', g)}
-              className={`px-2 py-1 text-xs rounded-full border transition-all ${
-                c.game === g
-                  ? 'bg-green-100 text-green-700 border-transparent ring-1 ring-green-400'
-                  : 'border-gray-200 text-gray-400 hover:border-gray-300 bg-white'
-              }`}>
-              {g}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500">頭数:</span>
-          <button type="button" onClick={() => onChange('count', Math.max(1, Number(c.count) - 1))}
-            className="w-6 h-6 rounded-full border border-gray-300 text-gray-500 hover:bg-gray-100 flex items-center justify-center text-sm font-bold">−</button>
-          <span className="text-sm font-bold text-stone-800 w-5 text-center">{c.count}</span>
-          <button type="button" onClick={() => onChange('count', Number(c.count) + 1)}
-            className="w-6 h-6 rounded-full border border-green-300 text-green-700 hover:bg-green-100 flex items-center justify-center text-sm font-bold">+</button>
-        </div>
+        {/* メモ */}
+        <input type="text" placeholder="メモ（任意）" value={c.notes} onChange={e => onChange('notes', e.target.value)}
+          className="w-full border border-gray-200 rounded-md bg-transparent text-xs px-1.5 py-1 focus:outline-none text-gray-500" />
       </div>
       {showMap && (
         <div className="border-t border-gray-100 p-2">
@@ -172,7 +179,7 @@ function SightingRow({ s, onChange, onRemove }) {
 function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, firearms }) {
   const [form, setForm] = useState(() => ({
     date: '', location: '', prefecture: '', game: '', count: '',
-    method: '', weather: '', notes: '',
+    method: '', isPestControl: false, weather: '', notes: '',
     groundId: '', roundsFired: '', ammoInventoryId: '',
     departureTime: '', returnTime: '', temperatureMin: '', temperatureMax: '',
     teamId: '', firearmId: '',
@@ -186,6 +193,7 @@ function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, fire
     temperatureMin: initial?.temperatureMin ?? '',
     temperatureMax: initial?.temperatureMax ?? '',
     method: initial?.method || '',
+    isPestControl: initial?.isPestControl || false,
     teamId: initial?.teamId || '',
     firearmId: initial?.firearmId || '',
     latitude: initial?.latitude ?? null,
@@ -218,6 +226,7 @@ function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, fire
         shooterUserId: c.shooter_user_id || '',
         catchLat: c.catch_lat ?? null,
         catchLng: c.catch_lng ?? null,
+        catchLocation: c.catch_location || '',
       })))
       setSightings((sd || []).map(s => ({
         _key: s.id,
@@ -420,6 +429,18 @@ function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, fire
           </div>
         </div>
 
+        {/* 有害駆除タグ */}
+        <div>
+          <button type="button" onClick={() => set('isPestControl', !form.isPestControl)}
+            className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-all ${
+              form.isPestControl
+                ? 'bg-red-100 text-red-700 border-transparent ring-2 ring-offset-1 ring-red-400'
+                : 'border-gray-200 text-gray-500 hover:border-gray-300 bg-white'
+            }`}>
+            {form.isPestControl ? '有害駆除' : '有害駆除'}
+          </button>
+        </div>
+
         {/* 巻き狩り時：チーム選択 */}
         {isGroupHunt && (
           <div className="space-y-2 border-t border-indigo-200 pt-3">
@@ -493,10 +514,6 @@ function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, fire
                 isGroupHunt={isGroupHunt && !!form.teamId}
               />
             ))}
-            <button type="button" onClick={() => setCatches(prev => [...prev, EMPTY_CATCH()])}
-              className="w-full py-1.5 text-xs text-green-700 border border-green-300 border-dashed rounded-lg hover:bg-green-100 transition-colors">
-              + 捕獲を追加
-            </button>
 
             {catches.length === 0 && (
               <div className="space-y-3">
@@ -530,6 +547,10 @@ function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, fire
             {catches.length > 0 && (
               <div className="text-xs text-green-700 font-medium">合計: {catchTotal}頭</div>
             )}
+            <button type="button" onClick={() => setCatches(prev => [...prev, EMPTY_CATCH()])}
+              className="w-full py-1.5 text-xs text-green-700 border border-green-300 border-dashed rounded-lg hover:bg-green-100 transition-colors">
+              + 捕獲を追加
+            </button>
           </>
         )}
       </div>
@@ -655,6 +676,7 @@ export default function HuntingRecords() {
           count: Number(c.count) || 1,
           notes: c.notes || null,
           shooter_user_id: c.shooterUserId || null,
+          catch_location: c.catchLocation || null,
           catch_lat: c.catchLat != null ? Number(c.catchLat) : null,
           catch_lng: c.catchLng != null ? Number(c.catchLng) : null,
         }))
@@ -872,6 +894,9 @@ export default function HuntingRecords() {
                         {/* 狩猟種別タグ */}
                         {r.method && (
                           <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${huntTypeStyle}`}>{r.method}</span>
+                        )}
+                        {r.isPestControl && (
+                          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-700">有害駆除</span>
                         )}
                         {r.game && <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full">{r.game} {r.count ? `${r.count}頭` : ''}</span>}
                         {r.roundsFired > 0 && <span className="bg-amber-100 text-amber-700 text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5"><Crosshair size={10} /> {r.roundsFired}発</span>}

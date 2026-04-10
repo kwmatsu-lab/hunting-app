@@ -115,7 +115,7 @@ export function useShootingRecords() {
 // ── 狩猟記録 ───────────────────────────────────────────────
 const huntingTo = r => ({
   id: r.id, date: r.date, location: r.location, prefecture: r.prefecture,
-  game: r.game, count: r.count, method: r.method, ammoUsed: r.ammo_used,
+  game: r.game, count: r.count, method: r.method, isPestControl: r.is_pest_control || false, ammoUsed: r.ammo_used,
   weather: r.weather, notes: r.notes, userId: r.user_id,
   groundId: r.ground_id,
   groundName: r.hunting_grounds?.name || null,
@@ -140,7 +140,7 @@ const huntingTo = r => ({
 const huntingFrom = r => ({
   date: r.date, location: r.location, prefecture: r.prefecture,
   game: r.game, count: r.count ? Number(r.count) : 0,
-  method: r.method, ammo_used: r.ammoUsed, weather: r.weather, notes: r.notes,
+  method: r.method, is_pest_control: r.isPestControl || false, ammo_used: r.ammoUsed, weather: r.weather, notes: r.notes,
   ground_id: r.groundId || null,
   rounds_fired: r.roundsFired ? Number(r.roundsFired) : null,
   ammo_inventory_id: r.ammoInventoryId || null,
