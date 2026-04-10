@@ -2,9 +2,15 @@
 
 body {
   margin: 0;
-  font-family: system-ui, 'Segoe UI', sans-serif;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background-color: #faf9f7;
 }
 
 #root {
   min-height: 100vh;
+}
+
+/* ナチュラルテーマ：フォーカスリングをグリーン系に統一 */
+input:focus, select:focus, textarea:focus {
+  --tw-ring-color: #059669 !important;
 }

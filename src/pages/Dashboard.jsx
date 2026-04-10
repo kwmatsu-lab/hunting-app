@@ -8,13 +8,13 @@ function daysBetween(date1, date2) {
 
 function StatCard({ icon: Icon, label, value, color, to }) {
   return (
-    <Link to={to} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition-shadow">
+    <Link to={to} className="bg-white rounded-xl p-5 shadow-sm border border-stone-200 flex items-center gap-4 hover:shadow-md transition-shadow">
       <div className={`p-3 rounded-lg ${color}`}>
         <Icon size={22} className="text-white" />
       </div>
       <div>
-        <div className="text-2xl font-bold text-gray-800">{value}</div>
-        <div className="text-sm text-gray-500">{label}</div>
+        <div className="text-2xl font-bold text-stone-800">{value}</div>
+        <div className="text-sm text-stone-500">{label}</div>
       </div>
     </Link>
   )
@@ -40,14 +40,14 @@ export default function Dashboard() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">ダッシュボード</h1>
+      <h1 className="text-2xl font-bold text-stone-800 mb-6">ダッシュボード</h1>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard icon={Target} label="射撃記録" value={shooting.length} color="bg-blue-500" to="/shooting" />
-        <StatCard icon={TreePine} label="狩猟記録" value={hunting.length} color="bg-green-600" to="/hunting" />
-        <StatCard icon={Package} label="弾薬種類" value={ammo.length} color="bg-amber-500" to="/ammo" />
-        <StatCard icon={FileCheck} label="免許・許可証" value={licenses.length} color="bg-purple-500" to="/licenses" />
+        <StatCard icon={Target} label="射撃記録" value={shooting.length} color="bg-sky-600" to="/shooting" />
+        <StatCard icon={TreePine} label="狩猟記録" value={hunting.length} color="bg-emerald-600" to="/hunting" />
+        <StatCard icon={Package} label="弾薬種類" value={ammo.length} color="bg-amber-600" to="/ammo" />
+        <StatCard icon={FileCheck} label="免許・許可証" value={licenses.length} color="bg-stone-500" to="/licenses" />
       </div>
 
       {/* Alerts */}
@@ -79,25 +79,25 @@ export default function Dashboard() {
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Recent shooting */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-gray-700 flex items-center gap-2">
-              <Target size={16} className="text-blue-500" /> 最近の射撃記録
+            <h2 className="font-semibold text-stone-700 flex items-center gap-2">
+              <Target size={16} className="text-sky-600" /> 最近の射撃記録
             </h2>
-            <Link to="/shooting" className="text-xs text-blue-500 hover:underline">すべて見る</Link>
+            <Link to="/shooting" className="text-xs text-emerald-700 hover:underline">すべて見る</Link>
           </div>
           {recentShooting.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-4">記録がありません</p>
+            <p className="text-sm text-stone-400 text-center py-4">記録がありません</p>
           ) : (
             <div className="space-y-2">
               {recentShooting.map(r => (
-                <div key={r.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                <div key={r.id} className="flex items-center justify-between py-2 border-b border-stone-100 last:border-0">
                   <div>
-                    <div className="text-sm font-medium text-gray-800">{r.location || '場所未記入'}</div>
-                    <div className="text-xs text-gray-400">{r.date} · {r.firearm || '銃未記入'}</div>
+                    <div className="text-sm font-medium text-stone-800">{r.location || '場所未記入'}</div>
+                    <div className="text-xs text-stone-400">{r.date} · {r.firearm || '銃未記入'}</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-bold text-blue-600">{r.score ?? '-'}<span className="text-xs font-normal text-gray-400"> 点</span></div>
+                    <div className="text-sm font-bold text-sky-700">{r.score ?? '-'}<span className="text-xs font-normal text-stone-400"> 点</span></div>
                   </div>
                 </div>
               ))}
@@ -106,24 +106,24 @@ export default function Dashboard() {
         </div>
 
         {/* Recent hunting */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-gray-700 flex items-center gap-2">
-              <TreePine size={16} className="text-green-600" /> 最近の狩猟記録
+            <h2 className="font-semibold text-stone-700 flex items-center gap-2">
+              <TreePine size={16} className="text-emerald-600" /> 最近の狩猟記録
             </h2>
-            <Link to="/hunting" className="text-xs text-green-600 hover:underline">すべて見る</Link>
+            <Link to="/hunting" className="text-xs text-emerald-700 hover:underline">すべて見る</Link>
           </div>
           {recentHunting.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-4">記録がありません</p>
+            <p className="text-sm text-stone-400 text-center py-4">記録がありません</p>
           ) : (
             <div className="space-y-2">
               {recentHunting.map(r => (
-                <div key={r.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                <div key={r.id} className="flex items-center justify-between py-2 border-b border-stone-100 last:border-0">
                   <div>
-                    <div className="text-sm font-medium text-gray-800">{r.location || '場所未記入'}</div>
-                    <div className="text-xs text-gray-400">{r.date} · {r.game || '獲物未記入'}</div>
+                    <div className="text-sm font-medium text-stone-800">{r.location || '場所未記入'}</div>
+                    <div className="text-xs text-stone-400">{r.date} · {r.game || '獲物未記入'}</div>
                   </div>
-                  <div className="text-sm font-bold text-green-600">{r.count ?? 0}<span className="text-xs font-normal text-gray-400"> 頭</span></div>
+                  <div className="text-sm font-bold text-emerald-700">{r.count ?? 0}<span className="text-xs font-normal text-stone-400"> 頭</span></div>
                 </div>
               ))}
             </div>
