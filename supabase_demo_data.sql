@@ -252,7 +252,7 @@ FROM _demo_ids WHERE u2 IS NOT NULL ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO public.licenses (id, user_id, name, license_number, issued_date, expiry_date, issuer, notes)
 SELECT 'a1c30001-0000-0000-0000-000000000005'::uuid, u2,
-  '射撃教習修了証', '教習-2021-0123', '2021-05-15', NULL, '伊那射撃場', '初回許可取得時'
+  '射撃教習修了証', '教習-2021-0123', '2021-05-15', '2031-05-14', '伊那射撃場', '初回許可取得時'
 FROM _demo_ids WHERE u2 IS NOT NULL ON CONFLICT (id) DO NOTHING;
 
 -- 鈴木 一郎
@@ -278,7 +278,7 @@ FROM _demo_ids WHERE u3 IS NOT NULL ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO public.licenses (id, user_id, name, license_number, issued_date, expiry_date, issuer, notes)
 SELECT 'a1c30001-0000-0000-0000-00000000000a'::uuid, u3,
-  '射撃教習修了証', '教習-2021-0067', '2021-01-20', NULL, '帯広射撃場', '初回許可取得時'
+  '射撃教習修了証', '教習-2021-0067', '2021-01-20', '2031-01-19', '帯広射撃場', '初回許可取得時'
 FROM _demo_ids WHERE u3 IS NOT NULL ON CONFLICT (id) DO NOTHING;
 
 -- ==================================================
