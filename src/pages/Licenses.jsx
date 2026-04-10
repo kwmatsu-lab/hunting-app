@@ -375,10 +375,11 @@ function PermitBookCard({ book, onEdit, onRemove }) {
 const FIREARM_TYPES = ['散弾銃', 'ライフル', '空気銃', 'その他']
 const EMPTY_FIREARM = {
   name: '', type: '散弾銃', mechanism: '', manufacturer: '', model: '', serialNumber: '',
-  caliber: '',
+  caliber: '', purpose: '',
   originalPermitDate: '', originalPermitNumber: '',
   permitDate: '', permitNumber: '',
   permitValidityText: '', renewalFrom: '', renewalTo: '',
+  alternateBars: [],
   notes: ''
 }
 
@@ -474,6 +475,13 @@ function FirearmForm({ initial, onSave, onCancel }) {
           className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
       </label>
 
+      {/* 用途 */}
+      <label className="block">
+        <span className="text-xs text-gray-500 font-medium">用途</span>
+        <input type="text" placeholder="例: 狩猟、標的射撃、狩猟・標的射撃" value={form.purpose} onChange={e => set('purpose', e.target.value)}
+          className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+      </label>
+
       {/* 銃諸元 */}
       <div className="bg-gray-50 rounded-lg p-3 space-y-3">
         <div className="text-xs font-semibold text-gray-600">銃諸元</div>
@@ -565,6 +573,32 @@ function FirearmForm({ initial, onSave, onCancel }) {
         </div>
       </div>
 
+      {/* 替え銃身 */}
+      <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold text-gray-600">替え銃身（任意）</span>
+          <button type="button"
+            onClick={() => set('alternateBars', [...(form.alternateBars || []), { type: '', ammo: '' }])}
+            className="text-xs text-amber-600 hover:text-amber-700 font-medium">+ 追加</button>
+        </div>
+        {(form.alternateBars || []).map((bar, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <input type="text" placeholder="種類（例: スラッグ銃身）" value={bar.type}
+              onChange={e => { const a = [...form.alternateBars]; a[i] = { ...a[i], type: e.target.value }; set('alternateBars', a) }}
+              className="flex-1 border rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-amber-400" />
+            <input type="text" placeholder="適合実包（例: 12番スラッグ弾）" value={bar.ammo}
+              onChange={e => { const a = [...form.alternateBars]; a[i] = { ...a[i], ammo: e.target.value }; set('alternateBars', a) }}
+              className="flex-1 border rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-amber-400" />
+            <button type="button"
+              onClick={() => set('alternateBars', form.alternateBars.filter((_, j) => j !== i))}
+              className="text-gray-300 hover:text-red-400 text-base leading-none shrink-0">×</button>
+          </div>
+        ))}
+        {(!form.alternateBars || form.alternateBars.length === 0) && (
+          <p className="text-xs text-gray-400">替え銃身がある場合は「追加」で入力できます</p>
+        )}
+      </div>
+
       <label className="block">
         <span className="text-xs text-gray-500 font-medium">メモ</span>
         <textarea value={form.notes} onChange={e => set('notes', e.target.value)} rows={2}
@@ -596,6 +630,7 @@ function FirearmCard({ firearm, onEdit, onRemove }) {
               </span>
             </div>
             <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
+              {firearm.purpose && <InfoRow icon={ClipboardList} label="用途" value={firearm.purpose} />}
               {firearm.manufacturer && firearm.model && (
                 <InfoRow icon={Building2} label="製造" value={`${firearm.manufacturer} ${firearm.model}`} />
               )}
@@ -613,6 +648,19 @@ function FirearmCard({ firearm, onEdit, onRemove }) {
                   color="text-amber-500" />
               )}
             </div>
+            {firearm.alternateBars?.length > 0 && (
+              <div className="mt-2 space-y-1">
+                <div className="text-xs font-semibold text-gray-500">替え銃身</div>
+                {firearm.alternateBars.map((bar, i) => (
+                  <div key={i} className="text-xs text-gray-600 bg-gray-50 rounded px-2.5 py-1 flex items-center gap-2">
+                    <Crosshair size={11} className="text-gray-400 shrink-0" />
+                    {bar.type && <span>{bar.type}</span>}
+                    {bar.type && bar.ammo && <span className="text-gray-400">·</span>}
+                    {bar.ammo && <span className="text-gray-500">{bar.ammo}</span>}
+                  </div>
+                ))}
+              </div>
+            )}
             {firearm.notes && (
               <div className="mt-2 text-xs text-gray-500 bg-gray-50 rounded-lg px-2.5 py-1.5 flex items-start gap-1">
                 <StickyNote size={11} className="mt-0.5 shrink-0 text-gray-400" /> {firearm.notes}

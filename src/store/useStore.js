@@ -402,6 +402,7 @@ const firearmTo = r => ({
   id: r.id, name: r.name, type: r.type, manufacturer: r.manufacturer,
   model: r.model, serialNumber: r.serial_number, caliber: r.caliber,
   mechanism: r.mechanism,
+  purpose: r.purpose || '',
   originalPermitDate: r.original_permit_date,
   originalPermitNumber: r.original_permit_number,
   permitDate: r.permit_date,
@@ -409,12 +410,14 @@ const firearmTo = r => ({
   permitValidityText: r.permit_validity_text,
   renewalFrom: r.renewal_from,
   renewalTo: r.renewal_to,
+  alternateBars: r.alternate_barrels || [],
   notes: r.notes, userId: r.user_id
 })
 const firearmFrom = r => ({
   name: r.name, type: r.type, manufacturer: r.manufacturer, model: r.model,
   serial_number: r.serialNumber, caliber: r.caliber,
   mechanism: r.mechanism,
+  purpose: r.purpose || null,
   original_permit_date: r.originalPermitDate || null,
   original_permit_number: r.originalPermitNumber,
   permit_date: r.permitDate || null,
@@ -422,6 +425,7 @@ const firearmFrom = r => ({
   permit_validity_text: r.permitValidityText,
   renewal_from: r.renewalFrom || null,
   renewal_to: r.renewalTo || null,
+  alternate_barrels: r.alternateBars?.length ? r.alternateBars : [],
   notes: r.notes
 })
 export function useFirearms() {
