@@ -757,7 +757,6 @@ export default function HuntingRecords() {
   const myRecords = records.filter(r => r.userId === user.id)
   const teamRecords = records.filter(r => r.userId !== user.id)
   const totalGame = myRecords.reduce((s, r) => s + Number(r.count || 0), 0)
-  const totalRounds = myRecords.reduce((s, r) => s + Number(r.roundsFired || 0), 0)
   const gameCounts = myRecords.reduce((acc, r) => { if (r.game) acc[r.game] = (acc[r.game] || 0) + Number(r.count || 0); return acc }, {})
 
   return (
@@ -785,8 +784,7 @@ export default function HuntingRecords() {
         {[
           ['自分の出猟', myRecords.length, 'text-gray-800'],
           ['総獲物数', totalGame, 'text-green-600'],
-          ['総発射弾数', totalRounds, 'text-amber-600'],
-          ['発/頭（平均）', totalGame > 0 && totalRounds > 0 ? (totalRounds / totalGame).toFixed(1) : '-', 'text-gray-800'],
+          ['獲物/出猟', myRecords.length > 0 ? (totalGame / myRecords.length).toFixed(1) : '-', 'text-amber-600'],
         ].map(([l, v, c]) => (
           <div key={l} className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm text-center">
             <div className={`text-2xl font-bold ${c}`}>{v}</div>
