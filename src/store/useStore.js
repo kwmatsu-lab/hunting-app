@@ -213,7 +213,7 @@ export function useHuntingRecords() {
       const { data, error } = await supabase
         .from('hunting_records')
         .insert({ ...base, user_id: memberId })
-        .select('*, hunting_grounds(name), hunting_teams(name), profiles!user_id(display_name)')
+        .select('*, hunting_grounds(name), hunting_teams(name)')
         .single()
       if (!error && data) setRecords(prev => [...prev, huntingTo(data)])
     }
