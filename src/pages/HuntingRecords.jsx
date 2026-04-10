@@ -11,7 +11,7 @@ import MapPicker from '../components/MapPicker'
 import HuntingRecordMap from '../components/HuntingRecordMap'
 
 const GAME_OPTIONS = ['イノシシ', 'シカ', 'タヌキ', 'キジ', 'カモ', 'クマ', 'サル', 'その他']
-const HUNT_TYPE_OPTIONS = ['単独忍び猟', '巻き狩り', '待ち猟', '流し猟', 'その他']
+const HUNT_TYPE_OPTIONS = ['単独忍び猟', '巻き狩り', '待ち猟', '流し猟', 'わな猟', '網猟', 'その他']
 const WEATHER_OPTIONS = ['晴れ', '曇り', '雨', '雪', '霧']
 
 // 猟法タイプに対応するバッジスタイル
@@ -20,6 +20,8 @@ const HUNT_TYPE_STYLE = {
   '巻き狩り':   'bg-purple-100 text-purple-700',
   '待ち猟':     'bg-blue-100 text-blue-700',
   '流し猟':     'bg-teal-100 text-teal-700',
+  'わな猟':     'bg-amber-100 text-amber-700',
+  '網猟':       'bg-cyan-100 text-cyan-700',
   'その他':     'bg-gray-100 text-gray-600',
 }
 

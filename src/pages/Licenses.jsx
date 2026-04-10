@@ -13,13 +13,20 @@ function daysBetween(date1, date2) {
   return Math.ceil((new Date(date1) - new Date(date2)) / (1000 * 60 * 60 * 24))
 }
 
+function monthsBetween(expiryDate) {
+  const today = new Date()
+  const expiry = new Date(expiryDate)
+  return (expiry.getFullYear() - today.getFullYear()) * 12 + (expiry.getMonth() - today.getMonth()) + (expiry.getDate() >= today.getDate() ? 0 : -1)
+}
+
 function getStatus(expiryDate) {
   const today = new Date().toISOString().split('T')[0]
   const days = daysBetween(expiryDate, today)
-  if (days <= 0)  return { label: '期限切れ', color: 'red',   days }
-  if (days <= 30) return { label: `残り${days}日`, color: 'red',   days }
-  if (days <= 90) return { label: `残り${days}日`, color: 'amber', days }
-  return           { label: '有効',          color: 'green', days }
+  const months = monthsBetween(expiryDate)
+  if (days <= 0)    return { label: '期限切れ',     color: 'red',   days, renewal: true }
+  if (days <= 30)   return { label: `残り${days}日`, color: 'red',   days, renewal: true }
+  if (months < 3)   return { label: `残り${days}日`, color: 'amber', days, renewal: true }
+  return             { label: '有効',            color: 'green', days, renewal: false }
 }
 
 function StatusBar({ color }) {
@@ -35,8 +42,15 @@ function StatusBadge({ status }) {
     green: 'bg-emerald-100 text-emerald-700 border border-emerald-200',
   }
   return (
-    <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${map[status.color]}`}>
-      {status.days <= 0 ? '期限切れ' : status.label}
+    <span className="inline-flex items-center gap-1.5">
+      <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${map[status.color]}`}>
+        {status.days <= 0 ? '期限切れ' : status.label}
+      </span>
+      {status.renewal && (
+        <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-700 border border-orange-200">
+          要更新
+        </span>
+      )}
     </span>
   )
 }
@@ -55,12 +69,12 @@ function InfoRow({ icon: Icon, label, value, color = 'text-gray-500' }) {
 }
 
 // ── タブ1: 狩猟免許 ───────────────────────────────────────
-const LICENSE_TYPES = ['第一種銃猟免許', '第二種銃猟免許', 'わな猟免許', 'その他']
-const LECTURE_TYPES = ['猟銃等講習会修了証', '技能講習修了証']
-const EMPTY_LICENSE = { name: '', licenseNumber: '', issuedDate: '', expiryDate: '', issuer: '', notes: '' }
+const LICENSE_TYPES = ['第一種銃猟免許', '第二種銃猟免許', 'わな猟免許', '網猟免許']
+const LECTURE_TYPES = ['猟銃等講習会修了証', '技能講習修了証', 'その他']
+const EMPTY_LICENSE = { name: '', licenseNumber: '', issuedDate: '', expiryDate: '', issuer: '', notes: '', category: 'license' }
 
 function LicenseForm({ initial, onSave, onCancel }) {
-  const [form, setForm] = useState(initial || EMPTY_LICENSE)
+  const [form, setForm] = useState(initial ? { ...initial, category: 'license' } : EMPTY_LICENSE)
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
   return (
@@ -269,13 +283,23 @@ function RegistrationCard({ reg, onEdit, onRemove }) {
 }
 
 // ── タブ3: 講習・資格 ────────────────────────────────────
-const EMPTY_LECTURE = { name: '猟銃等講習会修了証', licenseNumber: '', issuedDate: '', expiryDate: '', issuer: '', notes: '' }
+const EMPTY_LECTURE = { name: '猟銃等講習会修了証', customName: '', licenseNumber: '', issuedDate: '', expiryDate: '', issuer: '', notes: '', category: 'lecture' }
 
 function LectureForm({ initial, onSave, onCancel }) {
-  const [form, setForm] = useState(initial || EMPTY_LECTURE)
+  const isOther = initial && !LECTURE_TYPES.slice(0, -1).includes(initial.name)
+  const initState = initial
+    ? { ...initial, name: isOther && initial.name !== 'その他' ? 'その他' : initial.name, customName: isOther && initial.name !== 'その他' ? initial.name : '' }
+    : EMPTY_LECTURE
+  const [form, setForm] = useState(initState)
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+
+  const handleSave = (f) => {
+    const saveName = f.name === 'その他' ? (f.customName || 'その他') : f.name
+    onSave({ ...f, name: saveName, category: 'lecture' })
+  }
+
   return (
-    <form onSubmit={e => { e.preventDefault(); onSave(form) }} className="space-y-3">
+    <form onSubmit={e => { e.preventDefault(); handleSave(form) }} className="space-y-3">
       <label className="block">
         <span className="text-xs text-gray-500 font-medium">種別 *</span>
         <select required value={form.name} onChange={e => set('name', e.target.value)}
@@ -283,6 +307,13 @@ function LectureForm({ initial, onSave, onCancel }) {
           {LECTURE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
       </label>
+      {form.name === 'その他' && (
+        <label className="block">
+          <span className="text-xs text-gray-500 font-medium">講習・資格の名称</span>
+          <input type="text" placeholder="名称を入力" value={form.customName || ''} onChange={e => set('customName', e.target.value)}
+            className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400" />
+        </label>
+      )}
       <label className="block">
         <span className="text-xs text-gray-500 font-medium">修了証番号</span>
         <input type="text" placeholder="例: 安全-2024-0023" value={form.licenseNumber} onChange={e => set('licenseNumber', e.target.value)}
@@ -619,9 +650,21 @@ function FirearmForm({ initial, onSave, onCancel }) {
   )
 }
 
+function getFirearmStatus(firearm) {
+  if (!firearm.renewalTo) return null
+  const today = new Date().toISOString().split('T')[0]
+  const days = daysBetween(firearm.renewalTo, today)
+  const months = monthsBetween(firearm.renewalTo)
+  if (days <= 0)    return { label: '更新期限切れ',   color: 'red',   days, renewal: true }
+  if (days <= 30)   return { label: `残り${days}日`, color: 'red',   days, renewal: true }
+  if (months < 3)   return { label: `残り${days}日`, color: 'amber', days, renewal: true }
+  return             { label: '有効',            color: 'green', days, renewal: false }
+}
+
 function FirearmCard({ firearm, onEdit, onRemove }) {
   const borderColor = TYPE_BORDER[firearm.type] || 'border-l-gray-300'
   const barColor = TYPE_BAR[firearm.type] || 'bg-gray-300'
+  const status = getFirearmStatus(firearm)
 
   return (
     <div className={`bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden border-l-4 ${borderColor}`}>
@@ -635,6 +678,7 @@ function FirearmCard({ firearm, onEdit, onRemove }) {
               <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${TYPE_BADGE[firearm.type] || TYPE_BADGE['その他']}`}>
                 {firearm.type}
               </span>
+              {status && <StatusBadge status={status} />}
             </div>
             <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
               {firearm.purpose && <InfoRow icon={ClipboardList} label="用途" value={firearm.purpose} />}
@@ -707,8 +751,8 @@ export default function Licenses() {
   const { records: firearms, add: addGun, update: updGun, remove: remGun } = useFirearms()
   const { records: permitBooks, add: addPB, update: updPB, remove: remPB } = usePermitBooks()
 
-  const lectureRecords = licenses.filter(l => LECTURE_TYPES.includes(l.name))
-  const licenseRecords = licenses.filter(l => !LECTURE_TYPES.includes(l.name))
+  const lectureRecords = licenses.filter(l => l.category === 'lecture' || (!l.category && LECTURE_TYPES.slice(0, -1).includes(l.name)))
+  const licenseRecords = licenses.filter(l => l.category === 'license' || (!l.category && !LECTURE_TYPES.slice(0, -1).includes(l.name)))
 
   // タブ設定
   const TAB_COLORS = {

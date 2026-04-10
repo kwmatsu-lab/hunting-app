@@ -315,12 +315,14 @@ export function useAmmoLedger() {
 const licenseTo = r => ({
   id: r.id, name: r.name, licenseNumber: r.license_number,
   issuedDate: r.issued_date, expiryDate: r.expiry_date,
-  issuer: r.issuer, notes: r.notes, userId: r.user_id
+  issuer: r.issuer, notes: r.notes, userId: r.user_id,
+  category: r.category || null,
 })
 const licenseFrom = r => ({
   name: r.name, license_number: r.licenseNumber,
   issued_date: r.issuedDate || null, expiry_date: r.expiryDate,
-  issuer: r.issuer, notes: r.notes
+  issuer: r.issuer, notes: r.notes,
+  category: r.category || null,
 })
 
 export function useLicenses() {
