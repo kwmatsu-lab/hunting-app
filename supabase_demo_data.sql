@@ -139,7 +139,7 @@ INSERT INTO public.firearms (id, user_id, name, type, manufacturer, model, seria
   original_permit_date, original_permit_number, permit_date, permit_number, permit_validity_text,
   renewal_from, renewal_to, notes)
 SELECT 'd1d10001-0000-0000-0000-000000000003'::uuid, u3,
-  'ブローニング BLR .30-06', 'ライフル銃', 'Browning', 'BLR', 'BLR-987654', '.30-06', 'レバーアクション式',
+  'ブローニング BLR .30-06', 'ライフル', 'Browning', 'BLR', 'BLR-987654', '.30-06', 'レバーアクション式',
   '2022-05-10', '220050001', '2027-05-08', '220050201', '令和12年の誕生日まで',
   '2030-03-01', '2030-04-01', '狩猟・標的射撃兼用'
 FROM _demo_ids WHERE u3 IS NOT NULL ON CONFLICT (id) DO NOTHING;
