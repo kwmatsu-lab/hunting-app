@@ -15,8 +15,7 @@ function useTable(table, mapTo, mapFrom) {
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-    if (error) console.error(`[DEBUG] ${table} fetch error:`, error.message, error.code, error.details)
-    else setRecords((data || []).map(mapTo))
+    if (!error) setRecords((data || []).map(mapTo))
     setLoading(false)
   }, [user, table])
 
@@ -169,8 +168,7 @@ export function useHuntingRecords() {
       .from('hunting_records')
       .select('*, hunting_grounds(name)')
       .order('date', { ascending: false })
-    if (error) console.error('[DEBUG] hunting_records fetch error:', error.message, error.code, error.details)
-    else setRecords((data || []).map(huntingTo))
+    if (!error) setRecords((data || []).map(huntingTo))
     setLoading(false)
   }, [user])
 
@@ -338,11 +336,10 @@ export function useHuntingTeams() {
   const fetchTeams = useCallback(async () => {
     if (!user) return
     setLoading(true)
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('team_members')
       .select('team_id, role, hunting_teams(id, name, description, invite_code, created_by, created_at)')
       .eq('user_id', user.id)
-    if (error) console.error('[DEBUG] team_members fetch error:', error.message, error.code, error.details)
     setTeams((data || []).map(r => ({
       id: r.hunting_teams?.id,
       name: r.hunting_teams?.name,
