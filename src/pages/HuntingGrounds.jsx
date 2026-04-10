@@ -28,22 +28,24 @@ function GroundForm({ initial, onSave, onCancel }) {
           <input type="text" placeholder="北海道" value={form.prefecture} onChange={e => set('prefecture', e.target.value)}
             className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" />
         </label>
-        <label className="block">
+        <div className="block col-span-2">
           <span className="text-xs text-gray-500 font-medium">地形</span>
-          <select value={form.terrain} onChange={e => set('terrain', e.target.value)}
-            className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-            <option value="">選択</option>
-            {TERRAINS.map(t => <option key={t} value={t}>{t}</option>)}
-          </select>
-        </label>
+          <div className="flex flex-wrap gap-2 mt-1.5">
+            {TERRAINS.map(t => (
+              <button key={t} type="button" onClick={() => set('terrain', form.terrain === t ? '' : t)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-all ${
+                  form.terrain === t
+                    ? 'bg-green-100 text-green-700 border-transparent ring-2 ring-offset-1 ring-green-400'
+                    : 'border-gray-200 text-gray-500 hover:border-gray-300 bg-white'
+                }`}>
+                {t}
+              </button>
+            ))}
+          </div>
+        </div>
         <label className="block col-span-2">
           <span className="text-xs text-gray-500 font-medium">住所・場所の詳細</span>
           <input type="text" placeholder="〇〇郡〇〇町 ××山系" value={form.address} onChange={e => set('address', e.target.value)}
-            className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" />
-        </label>
-        <label className="block">
-          <span className="text-xs text-gray-500 font-medium">面積 (ha)</span>
-          <input type="number" min="0" step="0.1" placeholder="50.0" value={form.areaHa} onChange={e => set('areaHa', e.target.value)}
             className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" />
         </label>
       </div>
