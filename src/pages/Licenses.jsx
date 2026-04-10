@@ -196,11 +196,6 @@ function RegistrationForm({ initial, onSave, onCancel }) {
         </label>
       </div>
       <label className="block">
-        <span className="text-xs text-gray-500 font-medium">登録料 (円)</span>
-        <input type="number" placeholder="16500" value={form.feePaid} onChange={e => set('feePaid', e.target.value)}
-          className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
-      </label>
-      <label className="block">
         <span className="text-xs text-gray-500 font-medium">メモ</span>
         <textarea value={form.notes} onChange={e => set('notes', e.target.value)} rows={2}
           className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none" />
@@ -245,9 +240,6 @@ function RegistrationCard({ reg, onEdit, onRemove }) {
               <InfoRow icon={Shield} label="種別" value={reg.licenseType} />
               <InfoRow icon={Calendar} label="有効開始" value={reg.validFrom} />
               <InfoRow icon={Calendar} label="有効終了" value={reg.validTo} />
-              {reg.feePaid && (
-                <InfoRow icon={Building2} label="登録料" value={`¥${reg.feePaid.toLocaleString()}`} />
-              )}
             </div>
             {reg.notes && (
               <div className="mt-2 text-xs text-gray-500 bg-gray-50 rounded-lg px-2.5 py-1.5 flex items-start gap-1">
