@@ -305,6 +305,43 @@ function ScoreSheet({ disciplineId, data, onChange }) {
 // ── スコア詳細表示（読み取り専用） ───────────────────────────────────────
 const DIR_LABELS = { left: '左', center: '中', right: '右' }
 
+function StatBox({ label, value, sub, color = 'text-gray-800', bg = 'bg-gray-50' }) {
+  return (
+    <div className={`${bg} rounded-xl p-3 text-center`}>
+      <div className={`text-xl font-bold ${color}`}>{value}</div>
+      {sub && <div className="text-[10px] text-gray-400 mt-0.5">{sub}</div>}
+      <div className="text-[10px] text-gray-500 mt-0.5">{label}</div>
+    </div>
+  )
+}
+
+function MiniBar({ items }) {
+  // items: [{label, count, color}]
+  const total = items.reduce((s, i) => s + i.count, 0)
+  if (total === 0) return null
+  return (
+    <div>
+      <div className="flex h-5 rounded-full overflow-hidden gap-0.5">
+        {items.map(item => item.count > 0 && (
+          <div key={item.label} style={{ flex: item.count }}
+            className={`${item.color} flex items-center justify-center text-[9px] text-white font-bold`}>
+            {Math.round(item.count / total * 100) >= 15 ? `${Math.round(item.count / total * 100)}%` : ''}
+          </div>
+        ))}
+      </div>
+      <div className="flex gap-3 mt-1 flex-wrap">
+        {items.map(item => (
+          <span key={item.label} className="flex items-center gap-1 text-[10px] text-gray-500">
+            <span className={`inline-block w-2.5 h-2.5 rounded-sm ${item.color}`} />
+            {item.label}: {item.count} ({total > 0 ? Math.round(item.count / total * 100) : 0}%)
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── トラップ詳細 ──────────────────────────────────────────────────────────
 function TrapDetailView({ shots }) {
   return (
     <div className="grid grid-cols-5 gap-1">
@@ -336,6 +373,88 @@ function TrapDetailView({ shots }) {
   )
 }
 
+function TrapAnalyticsPanel({ shots }) {
+  const total  = shots.length
+  const hits   = shots.filter(s => s.hit === true).length
+  const misses = shots.filter(s => s.hit === false).length
+  const hitRate = total > 0 ? Math.round(hits / total * 100) : 0
+  const first  = shots.filter(s => s.hit === true && s.shotNum === 1).length
+  const second = shots.filter(s => s.hit === true && s.shotNum === 2).length
+  const firstRate  = hits > 0 ? Math.round(first  / hits * 100) : 0
+  const secondRate = hits > 0 ? Math.round(second / hits * 100) : 0
+  const dirs = { left: 0, center: 0, right: 0 }
+  shots.filter(s => s.hit === true && s.dir).forEach(s => { dirs[s.dir] = (dirs[s.dir] || 0) + 1 })
+
+  return (
+    <div className="space-y-4">
+      {/* サマリー */}
+      <div className="grid grid-cols-3 gap-2">
+        <StatBox label="命中" value={`${hits}/${total}`} sub={`${hitRate}%`} color="text-green-700" bg="bg-green-50" />
+        <StatBox label="1矢命中" value={`${first}`} sub={`${firstRate}%`} color="text-blue-700" bg="bg-blue-50" />
+        <StatBox label="失中" value={`${misses}`} sub={total > 0 ? `${100 - hitRate}%` : '-'} color="text-red-600" bg="bg-red-50" />
+      </div>
+
+      {/* 命中/失中バー */}
+      <div>
+        <div className="text-xs font-semibold text-gray-600 mb-1.5">命中 / 失中の内訳</div>
+        <MiniBar items={[
+          { label: '1矢命中', count: first,  color: 'bg-green-500' },
+          { label: '2矢命中', count: second, color: 'bg-amber-400' },
+          { label: '失中',    count: misses, color: 'bg-red-400'   },
+        ]} />
+      </div>
+
+      {/* 方向別 */}
+      {hits > 0 && (
+        <div>
+          <div className="text-xs font-semibold text-gray-600 mb-1.5">方向別命中分布</div>
+          <MiniBar items={[
+            { label: '左', count: dirs.left,   color: 'bg-blue-400'   },
+            { label: '中', count: dirs.center, color: 'bg-purple-400' },
+            { label: '右', count: dirs.right,  color: 'bg-cyan-400'   },
+          ]} />
+          <div className="flex gap-2 mt-2">
+            {[['left','左','bg-blue-50 border-blue-200 text-blue-700'],
+              ['center','中','bg-purple-50 border-purple-200 text-purple-700'],
+              ['right','右','bg-cyan-50 border-cyan-200 text-cyan-700']].map(([key, label, cls]) => (
+              <div key={key} className={`flex-1 text-center border rounded-lg py-2 text-xs font-semibold ${cls}`}>
+                {label}<br />
+                <span className="text-base font-bold">{dirs[key] || 0}</span>
+                <span className="text-[10px] font-normal ml-0.5">
+                  ({hits > 0 ? Math.round((dirs[key] || 0) / hits * 100) : 0}%)
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 1矢 vs 2矢 */}
+      {hits > 0 && (
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-2 text-center">
+            <div className="text-green-700 font-semibold">1矢命中率</div>
+            <div className="text-2xl font-bold text-green-700">{firstRate}%</div>
+            <div className="text-[10px] text-gray-400">{first}中 / {hits}命中中</div>
+          </div>
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 text-center">
+            <div className="text-amber-700 font-semibold">2矢命中率</div>
+            <div className="text-2xl font-bold text-amber-700">{secondRate}%</div>
+            <div className="text-[10px] text-gray-400">{second}中 / {hits}命中中</div>
+          </div>
+        </div>
+      )}
+
+      {/* 弾図 */}
+      <div>
+        <div className="text-xs font-semibold text-gray-600 mb-1.5">ショット詳細</div>
+        <TrapDetailView shots={shots} />
+      </div>
+    </div>
+  )
+}
+
+// ── スキート詳細 ──────────────────────────────────────────────────────────
 function SkeetDetailView({ stations }) {
   return (
     <div className="space-y-1">
@@ -377,36 +496,171 @@ function SkeetDetailView({ stations }) {
   )
 }
 
-function TargetDetailView({ shots }) {
+function SkeetAnalyticsPanel({ stations }) {
+  let hHits = 0, hTotal = 0, lHits = 0, lTotal = 0, dhHits = 0, dhTotal = 0, dlHits = 0, dlTotal = 0
+  let first1 = 0, first2 = 0
+
+  for (const st of stations) {
+    hTotal++; if (st.h === true) { hHits++; if (st.h_shotNum === 1) first1++; else if (st.h_shotNum === 2) first2++ }
+    lTotal++; if (st.l === true) { lHits++ }
+    if (st.dh !== undefined) { dhTotal++; if (st.dh === true) dhHits++ }
+    if (st.dl !== undefined) { dlTotal++; if (st.dl === true) dlHits++ }
+  }
+  const totalPossible = hTotal + lTotal + dhTotal + dlTotal
+  const totalHits     = hHits  + lHits  + dhHits  + dlHits
+  const hitRate = totalPossible > 0 ? Math.round(totalHits / totalPossible * 100) : 0
+
+  // Station summary
+  const stationStats = stations.map(st => {
+    let h = 0, t = 0
+    if (st.h === true) h++; t++
+    if (st.l === true) h++; t++
+    if (st.dh !== undefined) { if (st.dh === true) h++; t++ }
+    if (st.dl !== undefined) { if (st.dl === true) h++; t++ }
+    return { st: st.st, hits: h, total: t }
+  })
+
   return (
-    <div className="grid grid-cols-5 gap-1">
-      {shots.map(s => (
-        <div key={s.n} className="bg-gray-50 border border-gray-100 rounded p-1 text-center">
-          <div className="text-[10px] text-gray-400">{s.n}射</div>
-          <div className="font-bold text-blue-700 text-sm">{s.score !== '' ? s.score : '-'}</div>
+    <div className="space-y-4">
+      {/* サマリー */}
+      <div className="grid grid-cols-3 gap-2">
+        <StatBox label="総命中" value={`${totalHits}/${totalPossible}`} sub={`${hitRate}%`} color="text-green-700" bg="bg-green-50" />
+        <StatBox label="H命中率" value={`${hTotal > 0 ? Math.round(hHits/hTotal*100) : 0}%`} sub={`${hHits}/${hTotal}`} color="text-blue-700" bg="bg-blue-50" />
+        <StatBox label="L命中率" value={`${lTotal > 0 ? Math.round(lHits/lTotal*100) : 0}%`} sub={`${lHits}/${lTotal}`} color="text-purple-700" bg="bg-purple-50" />
+      </div>
+
+      {/* H/L/Double分布 */}
+      <div>
+        <div className="text-xs font-semibold text-gray-600 mb-1.5">バード別命中</div>
+        <MiniBar items={[
+          { label: 'H',  count: hHits,  color: 'bg-blue-500'   },
+          { label: 'L',  count: lHits,  color: 'bg-purple-500' },
+          { label: 'DH', count: dhHits, color: 'bg-cyan-500'   },
+          { label: 'DL', count: dlHits, color: 'bg-teal-500'   },
+        ]} />
+      </div>
+
+      {/* ステーション別 */}
+      <div>
+        <div className="text-xs font-semibold text-gray-600 mb-1.5">ステーション別成績</div>
+        <div className="grid grid-cols-4 gap-1.5">
+          {stationStats.map(s => {
+            const rate = s.total > 0 ? Math.round(s.hits / s.total * 100) : 0
+            return (
+              <div key={s.st} className={`rounded-lg p-2 text-center border ${
+                rate === 100 ? 'bg-green-50 border-green-200' :
+                rate >= 50   ? 'bg-blue-50 border-blue-200'   :
+                               'bg-red-50 border-red-200'}`}>
+                <div className="text-[10px] text-gray-500">St.{s.st}</div>
+                <div className={`text-sm font-bold ${rate === 100 ? 'text-green-700' : rate >= 50 ? 'text-blue-700' : 'text-red-600'}`}>
+                  {s.hits}/{s.total}
+                </div>
+                <div className="text-[10px] text-gray-400">{rate}%</div>
+              </div>
+            )
+          })}
         </div>
-      ))}
+      </div>
+
+      {/* 詳細 */}
+      <div>
+        <div className="text-xs font-semibold text-gray-600 mb-1.5">ショット詳細</div>
+        <SkeetDetailView stations={stations} />
+      </div>
     </div>
   )
 }
 
-function ScoreDetailView({ scoreDetail }) {
-  const [open, setOpen] = useState(false)
-  if (!scoreDetail) return null
+// ── 標的射撃詳細 ─────────────────────────────────────────────────────────
+function TargetDetailView({ shots }) {
   return (
-    <div className="mt-2">
-      <button type="button" onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium">
-        {open ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-        スコア詳細 {open ? '閉じる' : '表示'}
-      </button>
-      {open && (
-        <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-100">
-          {scoreDetail.type === 'trap'   && <TrapDetailView   shots={scoreDetail.shots} />}
-          {scoreDetail.type === 'skeet'  && <SkeetDetailView  stations={scoreDetail.stations} />}
-          {scoreDetail.type === 'target' && <TargetDetailView shots={scoreDetail.shots} />}
+    <div className="grid grid-cols-5 gap-1">
+      {shots.map(s => {
+        const v = Number(s.score)
+        const colorClass = v >= 10 ? 'text-yellow-600 bg-yellow-50 border-yellow-200' :
+                           v >= 9  ? 'text-green-700 bg-green-50 border-green-200' :
+                           v >= 8  ? 'text-blue-700 bg-blue-50 border-blue-200' :
+                                     'text-gray-600 bg-gray-50 border-gray-100'
+        return (
+          <div key={s.n} className={`border rounded p-1 text-center ${s.score !== '' ? colorClass : 'bg-gray-50 border-gray-100'}`}>
+            <div className="text-[10px] text-gray-400">{s.n}射</div>
+            <div className="font-bold text-sm">{s.score !== '' ? s.score : '-'}</div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function TargetAnalyticsPanel({ shots }) {
+  const valid = shots.filter(s => s.score !== '' && s.score != null)
+  const scores = valid.map(s => Number(s.score))
+  const total = scores.reduce((a, b) => a + b, 0)
+  const avg = valid.length > 0 ? (total / valid.length).toFixed(1) : '-'
+  const max = valid.length > 0 ? Math.max(...scores) : '-'
+  const min = valid.length > 0 ? Math.min(...scores) : '-'
+  const perfect = scores.filter(s => s === 10).length
+  const maxPossible = valid.length * 10
+  const rate = maxPossible > 0 ? Math.round(total / maxPossible * 100) : 0
+
+  // 点数分布
+  const dist = [10,9,8,7,6,5].map(v => ({ label: `${v}点`, count: scores.filter(s => s === v).length }))
+
+  return (
+    <div className="space-y-4">
+      {/* サマリー */}
+      <div className="grid grid-cols-2 gap-2">
+        <StatBox label="合計点" value={total} sub={`得点率 ${rate}%`} color="text-blue-700" bg="bg-blue-50" />
+        <StatBox label="平均点" value={avg} sub={`最高 ${max} / 最低 ${min}`} color="text-green-700" bg="bg-green-50" />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <StatBox label="10点（満点）" value={`${perfect}射`} sub={valid.length > 0 ? `${Math.round(perfect/valid.length*100)}%` : '-'} color="text-yellow-600" bg="bg-yellow-50" />
+        <StatBox label="採点済み" value={`${valid.length}射`} sub={`全${shots.length}射`} color="text-gray-700" bg="bg-gray-50" />
+      </div>
+
+      {/* 点数分布バー */}
+      <div>
+        <div className="text-xs font-semibold text-gray-600 mb-1.5">点数分布</div>
+        <div className="space-y-1">
+          {dist.filter(d => d.count > 0 || true).map(d => (
+            <div key={d.label} className="flex items-center gap-2">
+              <span className="text-[10px] text-gray-500 w-10 shrink-0 text-right">{d.label}</span>
+              <div className="flex-1 bg-gray-100 rounded-full h-4 overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all ${
+                    d.label === '10点' ? 'bg-yellow-400' :
+                    d.label === '9点'  ? 'bg-green-500'  :
+                    d.label === '8点'  ? 'bg-blue-400'   : 'bg-gray-400'}`}
+                  style={{ width: valid.length > 0 ? `${Math.round(d.count / valid.length * 100)}%` : '0%' }}
+                />
+              </div>
+              <span className="text-[10px] text-gray-500 w-8 shrink-0">{d.count}射</span>
+            </div>
+          ))}
         </div>
-      )}
+      </div>
+
+      {/* 弾図 */}
+      <div>
+        <div className="text-xs font-semibold text-gray-600 mb-1.5">各射点数</div>
+        <TargetDetailView shots={shots} />
+      </div>
+    </div>
+  )
+}
+
+// ── 詳細パネル（カードクリックで展開） ───────────────────────────────────
+function RecordDetailPanel({ scoreDetail }) {
+  if (!scoreDetail) return (
+    <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-400 text-center">
+      スコア詳細データなし
+    </div>
+  )
+  return (
+    <div className="mt-3 pt-3 border-t border-gray-100">
+      {scoreDetail.type === 'trap'   && <TrapAnalyticsPanel   shots={scoreDetail.shots} />}
+      {scoreDetail.type === 'skeet'  && <SkeetAnalyticsPanel  stations={scoreDetail.stations} />}
+      {scoreDetail.type === 'target' && <TargetAnalyticsPanel shots={scoreDetail.shots} />}
     </div>
   )
 }
@@ -604,6 +858,7 @@ export default function ShootingRecords() {
   const [editing, setEditing] = useState(null)
   const [filterDisc, setFilterDisc] = useState('すべて')
   const [saving, setSaving]   = useState(false)
+  const [expandedId, setExpandedId] = useState(null)
 
   const sorted = [...records].sort((a, b) => (b.date || '').localeCompare(a.date || ''))
   const discIds = [...new Set(sorted.map(r => r.discipline).filter(Boolean))]
@@ -687,45 +942,73 @@ export default function ShootingRecords() {
             const rangeName = r.rangeName || (ranges.find(rng => rng.id === r.rangeId)?.name) || r.location
             const firearmName = r.firearmName || (firearms.find(f => f.id === r.firearmId)?.name)
             const isTrapSkeet = disc?.type === 'trap' || disc?.type === 'skeet'
+            const isExpanded = expandedId === r.id
+            const hasDetail = !!r.scoreDetail
+
             return (
-              <div key={r.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-semibold text-gray-800">{r.date}</span>
-                        {rangeName && <span className="text-sm text-gray-600">{rangeName}</span>}
-                        {disc && (
-                          <span className="bg-blue-100 text-blue-700 text-xs font-medium px-2 py-0.5 rounded-full">
-                            {disc.label}
-                          </span>
-                        )}
-                        {r.score != null && (
-                          <span className="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-0.5 rounded-full">
-                            {r.score}{isTrapSkeet ? '/25' : '点'}
-                          </span>
-                        )}
+              <div key={r.id}
+                className={`bg-white rounded-xl border shadow-sm transition-all ${isExpanded ? 'border-blue-200 shadow-md' : 'border-gray-100'}`}>
+                {/* クリッカブルヘッダー */}
+                <div
+                  className={`p-4 cursor-pointer select-none ${hasDetail ? 'hover:bg-gray-50' : ''}`}
+                  onClick={() => hasDetail && setExpandedId(isExpanded ? null : r.id)}>
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-semibold text-gray-800">{r.date}</span>
+                          {rangeName && <span className="text-sm text-gray-600">{rangeName}</span>}
+                          {disc && (
+                            <span className="bg-blue-100 text-blue-700 text-xs font-medium px-2 py-0.5 rounded-full">
+                              {disc.label}
+                            </span>
+                          )}
+                          {r.score != null && (
+                            <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
+                              isTrapSkeet
+                                ? r.score >= 23 ? 'bg-yellow-100 text-yellow-700' :
+                                  r.score >= 20 ? 'bg-green-100 text-green-700'  : 'bg-blue-100 text-blue-700'
+                                : 'bg-green-100 text-green-700'
+                            }`}>
+                              {r.score}{isTrapSkeet ? '/25' : '点'}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {hasDetail && (
+                            <span className="text-[10px] text-blue-400 mr-1 flex items-center gap-0.5">
+                              {isExpanded ? <ChevronUp size={13}/> : <ChevronDown size={13}/>}
+                              {isExpanded ? '閉じる' : '詳細'}
+                            </span>
+                          )}
+                          <button onClick={e => { e.stopPropagation(); setEditing(r) }}
+                            className="p-2 text-gray-400 hover:text-blue-500 rounded-lg hover:bg-blue-50">
+                            <Pencil size={15} />
+                          </button>
+                          <button onClick={e => { e.stopPropagation(); remove(r.id) }}
+                            className="p-2 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50">
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex gap-1 shrink-0">
-                        <button onClick={() => setEditing(r)} className="p-2 text-gray-400 hover:text-blue-500 rounded-lg hover:bg-blue-50">
-                          <Pencil size={15} />
-                        </button>
-                        <button onClick={() => remove(r.id)} className="p-2 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50">
-                          <Trash2 size={15} />
-                        </button>
+                      <div className="mt-1 flex gap-3 text-xs text-gray-400 flex-wrap">
+                        {firearmName && <span>銃: {firearmName}</span>}
+                        {r.rounds && <span className="flex items-center gap-0.5"><Crosshair size={10} /> {r.rounds}発</span>}
+                        {r.ammoName && <span>装弾: {r.ammoName}</span>}
                       </div>
+                      {r.notes && (
+                        <div className="mt-1.5 text-xs text-gray-500 bg-gray-50 rounded px-2 py-1">{r.notes}</div>
+                      )}
                     </div>
-                    <div className="mt-1 flex gap-3 text-xs text-gray-400 flex-wrap">
-                      {firearmName && <span>銃: {firearmName}</span>}
-                      {r.rounds && <span className="flex items-center gap-0.5"><Crosshair size={10} /> {r.rounds}発</span>}
-                      {r.ammoName && <span>装弾: {r.ammoName}</span>}
-                    </div>
-                    {r.notes && (
-                      <div className="mt-1.5 text-xs text-gray-500 bg-gray-50 rounded px-2 py-1">{r.notes}</div>
-                    )}
-                    <ScoreDetailView scoreDetail={r.scoreDetail} />
                   </div>
                 </div>
+
+                {/* 展開パネル */}
+                {isExpanded && (
+                  <div className="px-4 pb-4">
+                    <RecordDetailPanel scoreDetail={r.scoreDetail} />
+                  </div>
+                )}
               </div>
             )
           })}
