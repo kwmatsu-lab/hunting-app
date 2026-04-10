@@ -638,7 +638,7 @@ export default function HuntingRecords() {
     if (recordCatches[recordId] && recordSightings[recordId]) return
     const [{ data: cd }, { data: sd }] = await Promise.all([
       supabase.from('hunting_catches')
-        .select('*, shooter:profiles!shooter_user_id(display_name)')
+        .select('*')
         .eq('hunting_record_id', recordId).order('catch_time'),
       supabase.from('hunting_sightings')
         .select('*')
