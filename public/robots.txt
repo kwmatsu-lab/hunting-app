@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /settings
+Disallow: /admin
+
+Sitemap: https://hunting-app.vercel.app/sitemap.xml
