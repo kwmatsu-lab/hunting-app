@@ -366,11 +366,7 @@ function mockRpc(name, params) {
 
   if (name === 'get_all_profiles') {
     if (!isAdmin) return Promise.resolve({ data: null, error: { message: '権限がありません' } })
-    const data = DEMO_USERS.map(u => {
-      const p = db.profiles.find(p => p.id === u.id) || {}
-      return { id: u.id, email: u.email, display_name: p.display_name, is_admin: p.is_admin, created_at: p.created_at }
-    })
-    return Promise.resolve({ data, error: null })
+    return Promise.resolve({ data: [], error: null })
   }
 
   if (name === 'set_user_admin') {
@@ -398,12 +394,7 @@ function mockRpc(name, params) {
 
   if (name === 'get_all_teams_admin') {
     if (!isAdmin) return Promise.resolve({ data: null, error: { message: '権限がありません' } })
-    const data = db.hunting_teams.map(t => {
-      const leader = db.profiles.find(p => p.id === t.created_by)
-      const member_count = db.team_members.filter(m => m.team_id === t.id).length
-      return { ...t, leader_name: leader?.display_name || '不明', member_count }
-    })
-    return Promise.resolve({ data, error: null })
+    return Promise.resolve({ data: [], error: null })
   }
 
   return Promise.resolve({ data: null, error: null })
