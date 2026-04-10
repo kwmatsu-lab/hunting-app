@@ -166,7 +166,7 @@ export function useHuntingRecords() {
     // チーム記録も含めて取得（RLS が権限を制御）
     const { data, error } = await supabase
       .from('hunting_records')
-      .select('*, hunting_grounds(name), hunting_teams(name), profiles!user_id(display_name)')
+      .select('*, hunting_grounds(name), hunting_teams(name)')
       .order('date', { ascending: false })
     if (!error) setRecords((data || []).map(huntingTo))
     setLoading(false)
@@ -178,7 +178,7 @@ export function useHuntingRecords() {
     const { data, error } = await supabase
       .from('hunting_records')
       .insert({ ...huntingFrom(record), user_id: user.id })
-      .select('*, hunting_grounds(name), hunting_teams(name), profiles!user_id(display_name)').single()
+      .select('*, hunting_grounds(name), hunting_teams(name)').single()
     if (error) throw error
     const mapped = huntingTo(data)
     setRecords(prev => [mapped, ...prev])
@@ -190,7 +190,7 @@ export function useHuntingRecords() {
       .from('hunting_records')
       .update(huntingFrom(record))
       .eq('id', id)
-      .select('*, hunting_grounds(name), hunting_teams(name), profiles!user_id(display_name)').single()
+      .select('*, hunting_grounds(name), hunting_teams(name)').single()
     if (error) throw error
     setRecords(prev => prev.map(r => r.id === id ? huntingTo(data) : r))
   }, [])
