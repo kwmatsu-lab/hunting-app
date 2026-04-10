@@ -168,6 +168,7 @@ export function useHuntingRecords() {
       .from('hunting_records')
       .select('*, hunting_grounds(name), hunting_teams(name)')
       .order('date', { ascending: false })
+    console.log('[DEBUG] hunting_records:', { count: data?.length, error: error?.message, code: error?.code, userId: user?.id })
     if (!error) setRecords((data || []).map(huntingTo))
     setLoading(false)
   }, [user])
