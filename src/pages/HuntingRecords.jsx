@@ -42,38 +42,51 @@ function CatchRow({ c, onChange, onRemove, teamMembers, isGroupHunt }) {
   const hasLocation = c.catchLat != null && c.catchLng != null
   return (
     <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-      <div className="flex items-center gap-1.5 px-2 py-1.5 flex-wrap sm:flex-nowrap">
-        <input type="time" value={c.catchTime} onChange={e => onChange('catchTime', e.target.value)}
-          className="border-0 bg-transparent text-xs font-mono w-20 focus:outline-none shrink-0" />
-        <select value={c.game} onChange={e => onChange('game', e.target.value)}
-          className="border-0 bg-transparent text-xs flex-1 focus:outline-none min-w-[80px]">
-          <option value="">獲物</option>
-          {GAME_OPTIONS.map(g => <option key={g} value={g}>{g}</option>)}
-        </select>
-        <input type="number" min="1" value={c.count} onChange={e => onChange('count', e.target.value)}
-          className="border-0 bg-transparent text-xs w-10 text-center focus:outline-none shrink-0" />
-        <span className="text-xs text-gray-400 shrink-0">頭</span>
+      <div className="px-3 py-2 space-y-2">
+        <div className="flex items-center gap-2">
+          <input type="time" value={c.catchTime} onChange={e => onChange('catchTime', e.target.value)}
+            className="border border-gray-200 rounded-md bg-transparent text-xs font-mono w-20 px-1.5 py-1 focus:outline-none shrink-0" />
 
-        {/* 巻き狩り時：射手選択 */}
-        {isGroupHunt && teamMembers.length > 0 && (
-          <select value={c.shooterUserId} onChange={e => onChange('shooterUserId', e.target.value)}
-            className="border-0 bg-transparent text-xs focus:outline-none text-purple-600 min-w-[80px]">
-            <option value="">射手?</option>
-            {teamMembers.map(m => (
-              <option key={m.userId} value={m.userId}>{m.displayName}</option>
-            ))}
-          </select>
-        )}
+          {/* 巻き狩り時：射手選択 */}
+          {isGroupHunt && teamMembers.length > 0 && (
+            <select value={c.shooterUserId} onChange={e => onChange('shooterUserId', e.target.value)}
+              className="border border-gray-200 rounded-md bg-transparent text-xs focus:outline-none text-purple-600 min-w-[80px] px-1.5 py-1">
+              <option value="">射手?</option>
+              {teamMembers.map(m => (
+                <option key={m.userId} value={m.userId}>{m.displayName}</option>
+              ))}
+            </select>
+          )}
 
-        <input type="text" placeholder="メモ" value={c.notes} onChange={e => onChange('notes', e.target.value)}
-          className="border-0 bg-transparent text-xs flex-1 focus:outline-none text-gray-500 min-w-[60px]" />
-        {/* 捕獲地点ボタン */}
-        <button type="button" onClick={() => setShowMap(m => !m)}
-          title="捕獲地点を地図で指定"
-          className={`shrink-0 p-1 rounded transition-colors ${hasLocation ? 'text-green-600 bg-green-50' : 'text-gray-300 hover:text-green-500'}`}>
-          <MapPin size={13} />
-        </button>
-        <button type="button" onClick={onRemove} className="text-gray-300 hover:text-red-400 shrink-0 text-base leading-none">×</button>
+          <input type="text" placeholder="メモ" value={c.notes} onChange={e => onChange('notes', e.target.value)}
+            className="border-0 bg-transparent text-xs flex-1 focus:outline-none text-gray-500 min-w-[60px]" />
+          <button type="button" onClick={() => setShowMap(m => !m)}
+            title="捕獲地点を地図で指定"
+            className={`shrink-0 p-1 rounded transition-colors ${hasLocation ? 'text-green-600 bg-green-50' : 'text-gray-300 hover:text-green-500'}`}>
+            <MapPin size={13} />
+          </button>
+          <button type="button" onClick={onRemove} className="text-gray-300 hover:text-red-400 shrink-0 text-base leading-none">×</button>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {GAME_OPTIONS.map(g => (
+            <button key={g} type="button" onClick={() => onChange('game', g)}
+              className={`px-2 py-1 text-xs rounded-full border transition-all ${
+                c.game === g
+                  ? 'bg-green-100 text-green-700 border-transparent ring-1 ring-green-400'
+                  : 'border-gray-200 text-gray-400 hover:border-gray-300 bg-white'
+              }`}>
+              {g}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">頭数:</span>
+          <button type="button" onClick={() => onChange('count', Math.max(1, Number(c.count) - 1))}
+            className="w-6 h-6 rounded-full border border-gray-300 text-gray-500 hover:bg-gray-100 flex items-center justify-center text-sm font-bold">−</button>
+          <span className="text-sm font-bold text-stone-800 w-5 text-center">{c.count}</span>
+          <button type="button" onClick={() => onChange('count', Number(c.count) + 1)}
+            className="w-6 h-6 rounded-full border border-green-300 text-green-700 hover:bg-green-100 flex items-center justify-center text-sm font-bold">+</button>
+        </div>
       </div>
       {showMap && (
         <div className="border-t border-gray-100 p-2">
@@ -100,27 +113,41 @@ function SightingRow({ s, onChange, onRemove }) {
   const hasLocation = s.sightLat != null && s.sightLng != null
   return (
     <div className="bg-white border border-amber-200 rounded-lg overflow-hidden">
-      <div className="flex items-center gap-1.5 px-2 py-1.5 flex-wrap sm:flex-nowrap">
-        <input type="time" value={s.sightTime} onChange={e => onChange('sightTime', e.target.value)}
-          className="border-0 bg-transparent text-xs font-mono w-20 focus:outline-none shrink-0" />
-        <select value={s.game} onChange={e => onChange('game', e.target.value)}
-          className="border-0 bg-transparent text-xs flex-1 focus:outline-none min-w-[80px]">
-          <option value="">獲物</option>
-          {GAME_OPTIONS.map(g => <option key={g} value={g}>{g}</option>)}
-        </select>
-        <input type="number" min="1" value={s.count} onChange={e => onChange('count', e.target.value)}
-          className="border-0 bg-transparent text-xs w-10 text-center focus:outline-none shrink-0" />
-        <span className="text-xs text-gray-400 shrink-0">頭</span>
-        <input type="text" placeholder="場所" value={s.location} onChange={e => onChange('location', e.target.value)}
-          className="border-0 bg-transparent text-xs flex-1 focus:outline-none text-gray-600 min-w-[60px]" />
-        <input type="text" placeholder="メモ" value={s.notes} onChange={e => onChange('notes', e.target.value)}
-          className="border-0 bg-transparent text-xs flex-1 focus:outline-none text-gray-400 min-w-[50px]" />
-        <button type="button" onClick={() => setShowMap(m => !m)}
-          title="目撃地点を地図で指定"
-          className={`shrink-0 p-1 rounded transition-colors ${hasLocation ? 'text-amber-500 bg-amber-50' : 'text-gray-300 hover:text-amber-400'}`}>
-          <MapPin size={13} />
-        </button>
-        <button type="button" onClick={onRemove} className="text-gray-300 hover:text-red-400 shrink-0 text-base leading-none">×</button>
+      <div className="px-3 py-2 space-y-2">
+        <div className="flex items-center gap-2">
+          <input type="time" value={s.sightTime} onChange={e => onChange('sightTime', e.target.value)}
+            className="border border-gray-200 rounded-md bg-transparent text-xs font-mono w-20 px-1.5 py-1 focus:outline-none shrink-0" />
+          <input type="text" placeholder="場所" value={s.location} onChange={e => onChange('location', e.target.value)}
+            className="border-0 bg-transparent text-xs flex-1 focus:outline-none text-gray-600 min-w-[60px]" />
+          <input type="text" placeholder="メモ" value={s.notes} onChange={e => onChange('notes', e.target.value)}
+            className="border-0 bg-transparent text-xs flex-1 focus:outline-none text-gray-400 min-w-[50px]" />
+          <button type="button" onClick={() => setShowMap(m => !m)}
+            title="目撃地点を地図で指定"
+            className={`shrink-0 p-1 rounded transition-colors ${hasLocation ? 'text-amber-500 bg-amber-50' : 'text-gray-300 hover:text-amber-400'}`}>
+            <MapPin size={13} />
+          </button>
+          <button type="button" onClick={onRemove} className="text-gray-300 hover:text-red-400 shrink-0 text-base leading-none">×</button>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {GAME_OPTIONS.map(g => (
+            <button key={g} type="button" onClick={() => onChange('game', g)}
+              className={`px-2 py-1 text-xs rounded-full border transition-all ${
+                s.game === g
+                  ? 'bg-amber-100 text-amber-700 border-transparent ring-1 ring-amber-400'
+                  : 'border-gray-200 text-gray-400 hover:border-gray-300 bg-white'
+              }`}>
+              {g}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">頭数:</span>
+          <button type="button" onClick={() => onChange('count', Math.max(1, Number(s.count) - 1))}
+            className="w-6 h-6 rounded-full border border-gray-300 text-gray-500 hover:bg-gray-100 flex items-center justify-center text-sm font-bold">−</button>
+          <span className="text-sm font-bold text-stone-800 w-5 text-center">{s.count}</span>
+          <button type="button" onClick={() => onChange('count', Number(s.count) + 1)}
+            className="w-6 h-6 rounded-full border border-amber-300 text-amber-700 hover:bg-amber-100 flex items-center justify-center text-sm font-bold">+</button>
+        </div>
       </div>
       {showMap && (
         <div className="border-t border-amber-100 p-2">
@@ -145,7 +172,7 @@ function SightingRow({ s, onChange, onRemove }) {
 function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, firearms }) {
   const [form, setForm] = useState(() => ({
     date: '', location: '', prefecture: '', game: '', count: '',
-    method: '', ammoUsed: '', weather: '', notes: '',
+    method: '', weather: '', notes: '',
     groundId: '', roundsFired: '', ammoInventoryId: '',
     departureTime: '', returnTime: '', temperatureMin: '', temperatureMax: '',
     teamId: '', firearmId: '',
@@ -234,8 +261,6 @@ function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, fire
 
   function handleAmmoChange(id) {
     set('ammoInventoryId', id)
-    const a = ammoItems.find(a => a.id === id)
-    if (a && !form.ammoUsed) set('ammoUsed', a.name)
   }
 
   function updateCatch(key, field, val) {
@@ -260,7 +285,7 @@ function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, fire
       firearmId: rawFirearmId || null,
       game: effectiveGame,
       count: effectiveCount,
-      ammoName: selectedAmmo?.name || form.ammoUsed || null,
+      ammoName: selectedAmmo?.name || null,
       _catches: catches,
       _sightings: sightings,
       _deductAmmo: deductAmmo && !!selectedAmmo && roundsNum > 0,
@@ -321,14 +346,21 @@ function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, fire
             <input type="number" step="0.5" placeholder="5" value={form.temperatureMax} onChange={e => set('temperatureMax', e.target.value)}
               className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
           </label>
-          <label className="block">
+          <div className="block col-span-2">
             <span className="text-xs text-gray-500 font-medium">天候</span>
-            <select value={form.weather} onChange={e => set('weather', e.target.value)}
-              className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
-              <option value="">選択</option>
-              {WEATHER_OPTIONS.map(w => <option key={w} value={w}>{w}</option>)}
-            </select>
-          </label>
+            <div className="flex flex-wrap gap-2 mt-1.5">
+              {WEATHER_OPTIONS.map(w => (
+                <button key={w} type="button" onClick={() => set('weather', form.weather === w ? '' : w)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-all ${
+                    form.weather === w
+                      ? 'bg-blue-100 text-blue-700 border-transparent ring-2 ring-offset-1 ring-blue-400'
+                      : 'border-gray-200 text-gray-500 hover:border-gray-300 bg-white'
+                  }`}>
+                  {w}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -467,20 +499,32 @@ function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, fire
             </button>
 
             {catches.length === 0 && (
-              <div className="grid grid-cols-2 gap-3">
-                <label className="block">
+              <div className="space-y-3">
+                <div>
                   <span className="text-xs text-gray-500 font-medium">獲物（サマリー）</span>
-                  <select value={form.game} onChange={e => set('game', e.target.value)}
-                    className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                    <option value="">選択</option>
-                    {GAME_OPTIONS.map(g => <option key={g} value={g}>{g}</option>)}
-                  </select>
-                </label>
-                <label className="block">
+                  <div className="flex flex-wrap gap-2 mt-1.5">
+                    {GAME_OPTIONS.map(g => (
+                      <button key={g} type="button" onClick={() => set('game', form.game === g ? '' : g)}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-all ${
+                          form.game === g
+                            ? 'bg-green-100 text-green-700 border-transparent ring-2 ring-offset-1 ring-green-400'
+                            : 'border-gray-200 text-gray-500 hover:border-gray-300 bg-white'
+                        }`}>
+                        {g}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
                   <span className="text-xs text-gray-500 font-medium">頭数</span>
-                  <input type="number" min="0" value={form.count} onChange={e => set('count', e.target.value)}
-                    className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" />
-                </label>
+                  <div className="flex items-center gap-3 mt-1.5">
+                    <button type="button" onClick={() => set('count', Math.max(0, (Number(form.count) || 0) - 1))}
+                      className="w-9 h-9 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100 flex items-center justify-center text-lg font-bold transition-colors">−</button>
+                    <span className="text-xl font-bold text-stone-800 w-8 text-center">{form.count || 0}</span>
+                    <button type="button" onClick={() => set('count', (Number(form.count) || 0) + 1)}
+                      className="w-9 h-9 rounded-full border border-green-300 text-green-700 hover:bg-green-100 flex items-center justify-center text-lg font-bold transition-colors">+</button>
+                  </div>
+                </div>
               </div>
             )}
             {catches.length > 0 && (
@@ -535,11 +579,6 @@ function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, fire
                 <option key={a.id} value={a.id}>{a.name}{a.caliber ? ` [${a.caliber}]` : ''} — 在庫: {a.quantity}</option>
               ))}
             </select>
-          </label>
-          <label className="block col-span-2">
-            <span className="text-xs text-gray-500 font-medium">装弾名（手入力）</span>
-            <input type="text" placeholder="例: 12番 スラッグ弾" value={form.ammoUsed} onChange={e => set('ammoUsed', e.target.value)}
-              className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
           </label>
           <label className="block">
             <span className="text-xs text-gray-500 font-medium">発射弾数</span>
