@@ -560,17 +560,14 @@ function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, fire
             {catches.length > 0 && (
               <div className="text-xs text-green-700 font-medium">合計: {catchTotal}頭</div>
             )}
+            <button type="button" onClick={() => setCatches(prev => [...prev, EMPTY_CATCH()])}
+              className="w-full py-1.5 text-xs text-green-700 border border-green-300 border-dashed rounded-lg hover:bg-green-100 transition-colors">
+              + 捕獲を追加
+            </button>
             {catches.length === 0 && (
-              <button type="button" onClick={() => setCatches(prev => [...prev, EMPTY_CATCH()])}
-                className="w-full py-2 text-xs text-green-700 bg-white border border-green-300 rounded-lg hover:bg-green-100 transition-colors flex items-center justify-center gap-1.5">
-                <Clock size={11} /> 詳細入力モード（時刻・場所・射手を個別に記録）
-              </button>
-            )}
-            {catches.length > 0 && (
-              <button type="button" onClick={() => setCatches(prev => [...prev, EMPTY_CATCH()])}
-                className="w-full py-1.5 text-xs text-green-700 border border-green-300 border-dashed rounded-lg hover:bg-green-100 transition-colors">
-                + 捕獲を追加
-              </button>
+              <div className="text-[10px] text-gray-400 text-center flex items-center justify-center gap-1">
+                <Clock size={10} /> 捕獲を追加すると、時刻・場所・射手を個別に記録できます
+              </div>
             )}
           </>
         )}
