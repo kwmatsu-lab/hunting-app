@@ -11,6 +11,7 @@ import Licenses from './pages/Licenses'
 import Statistics from './pages/Statistics'
 import HuntingGrounds from './pages/HuntingGrounds'
 import Settings from './pages/Settings'
+import FormGenerator from './pages/FormGenerator'
 import Teams from './pages/Teams'
 import AdminPage from './pages/AdminPage'
 import PrivacyPolicy from './pages/PrivacyPolicy'
@@ -42,6 +43,7 @@ function AppRoutes() {
         <Route path="/ammo"     element={<AmmoInventory />} />
         <Route path="/licenses" element={<Licenses />} />
         <Route path="/stats"    element={<Statistics />} />
+        <Route path="/forms"    element={<FormGenerator />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/admin"    element={<AdminPage />} />
         <Route path="/privacy"  element={<PrivacyPolicy />} />

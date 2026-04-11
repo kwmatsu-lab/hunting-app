@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import {
   Target, TreePine, Package, FileCheck, LayoutDashboard,
-  BarChart2, MapPin, Settings, Menu, X, LogOut, Users2, Shield, Crosshair
+  BarChart2, MapPin, Settings, Menu, X, LogOut, Users2, Shield, Crosshair, FileText
 } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
@@ -17,6 +17,7 @@ function useNavItems() {
     { to: '/teams',     icon: Users2,           label: '猟隊管理' },
     { to: '/ammo',      icon: Package,          label: '実包管理' },
     { to: '/licenses',  icon: FileCheck,        label: '免許・許可証' },
+    { to: '/forms',     icon: FileText,         label: '申請様式作成' },
     { to: '/stats',     icon: BarChart2,        label: '統計・分析' },
     { to: '/settings',  icon: Settings,         label: '設定' },
   ]
