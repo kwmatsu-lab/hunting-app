@@ -640,11 +640,18 @@ function HuntingTab({ records, selectedName }) {
 }
 
 // ── メンバー比較タブ ─────────────────────────────────────────
-function CompareTab({ allShooting, allHunting, profiles, period, currentUserId }) {
+function CompareTab({ allShooting, allHunting, profiles, period, currentUserId, teams, teamMembers }) {
   const profileMap = Object.fromEntries(profiles.map(p => [p.id, p.display_name || '不明']))
+  const [selectedTeamId, setSelectedTeamId] = useState('')
 
-  const fShooting = filterByPeriod(allShooting, period)
-  const fHunting = filterByPeriod(allHunting, period)
+  // 選択した猟隊のメンバーIDリスト
+  const memberIds = useMemo(() => {
+    if (!selectedTeamId) return profiles.map(p => p.id)
+    return (teamMembers[selectedTeamId] || []).map(m => m.user_id)
+  }, [selectedTeamId, teamMembers, profiles])
+
+  const fShooting = filterByPeriod(allShooting, period).filter(r => memberIds.includes(r.user_id))
+  const fHunting = filterByPeriod(allHunting, period).filter(r => memberIds.includes(r.user_id))
 
   // 射撃ランキング
   const shootingStats = {}
@@ -679,7 +686,7 @@ function CompareTab({ allShooting, allHunting, profiles, period, currentUserId }
     .map(([uid, { game, outings, rounds }]) => ({
       uid, name: profileMap[uid] || '不明',
       game, outings,
-      rPerGame: game > 0 && rounds > 0 ? (rounds / game).toFixed(1) : '-',
+      gamePerOuting: outings > 0 ? (game / outings).toFixed(1) : '-',
       isMe: uid === currentUserId,
     }))
     .sort((a, b) => b.game - a.game)
@@ -710,8 +717,33 @@ function CompareTab({ allShooting, allHunting, profiles, period, currentUserId }
 
   return (
     <div className="space-y-5">
-      <div className="grid md:grid-cols-2 gap-5">
-        {/* 射撃スコアランキング */}
+      {/* 猟隊選択 */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3 flex items-center gap-3">
+        <span className="text-xs text-gray-500 font-medium shrink-0">猟隊で比較:</span>
+        <div className="relative flex-1 max-w-xs">
+          <select value={selectedTeamId} onChange={e => setSelectedTeamId(e.target.value)}
+            className="w-full border border-gray-200 rounded-lg pl-3 pr-8 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none bg-white">
+            <option value="">全ユーザー</option>
+            {teams.map(t => (
+              <option key={t.id} value={t.id}>{t.name}</option>
+            ))}
+          </select>
+          <ChevronDown size={13} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+        </div>
+        {selectedTeamId && (
+          <span className="text-xs text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-full">
+            {memberIds.length}人
+          </span>
+        )}
+      </div>
+
+      {/* ── 射撃の比較 ── */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 pt-1">
+          <Crosshair size={16} className="text-blue-500" />
+          <h3 className="text-sm font-bold text-gray-700">射撃の比較</h3>
+        </div>
+
         <ChartCard title="🏆 射撃スコア ランキング" empty={shootingRanking.length === 0}>
           <div className="space-y-2">
             {shootingRanking.map((r, i) => (
@@ -732,7 +764,63 @@ function CompareTab({ allShooting, allHunting, profiles, period, currentUserId }
           </div>
         </ChartCard>
 
-        {/* 狩猟成果ランキング */}
+        <ChartCard title="📈 メンバー別スコア推移（月別平均）" empty={multiLineData.length < 2 || usersWithScores.length === 0}>
+          <ResponsiveContainer width="100%" height={260}>
+            <LineChart data={multiLineData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+              <YAxis domain={['auto', 'auto']} tick={{ fontSize: 11 }} />
+              <Tooltip formatter={(v, k) => [`${v}点`, profileMap[k] || k]} />
+              <Legend formatter={k => profileMap[k] || k} />
+              {usersWithScores.map((uid, i) => (
+                <Line key={uid} type="monotone" dataKey={uid}
+                  stroke={USER_COLORS[i % USER_COLORS.length]} strokeWidth={uid === currentUserId ? 3 : 1.5}
+                  dot={{ r: 3 }} connectNulls />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        {shootingRanking.length > 0 && (
+          <ChartCard title="📊 平均スコア比較">
+            <ResponsiveContainer width="100%" height={Math.max(160, shootingRanking.length * 44)}>
+              <BarChart data={shootingRanking.map(r => ({ name: r.name, avg: Number(r.avg), best: r.best, isMe: r.isMe }))} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis type="number" domain={['auto', 'auto']} tick={{ fontSize: 11 }} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} width={80} />
+                <Tooltip formatter={v => [`${v}点`, '']} />
+                <Legend />
+                <Bar dataKey="avg" name="平均スコア" radius={[0, 4, 4, 0]}
+                  fill="#3b82f6" />
+                <Bar dataKey="best" name="自己ベスト" radius={[0, 4, 4, 0]}
+                  fill="#93c5fd" />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        )}
+
+        {ammoRanking.length > 0 && (
+          <ChartCard title="💥 弾薬消費ランキング">
+            <ResponsiveContainer width="100%" height={Math.max(120, ammoRanking.length * 44)}>
+              <BarChart data={ammoRanking} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis type="number" tick={{ fontSize: 11 }} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} width={80} />
+                <Tooltip formatter={v => [`${v}発`, '消費弾数']} />
+                <Bar dataKey="rounds" name="消費弾数（発）" fill="#f59e0b" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        )}
+      </div>
+
+      {/* ── 狩猟の比較 ── */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 pt-2">
+          <TreePine size={16} className="text-green-600" />
+          <h3 className="text-sm font-bold text-gray-700">狩猟の比較</h3>
+        </div>
+
         <ChartCard title="🦌 狩猟成果 ランキング" empty={huntingRanking.length === 0}>
           <div className="space-y-2">
             {huntingRanking.map((r, i) => (
@@ -742,7 +830,7 @@ function CompareTab({ allShooting, allHunting, profiles, period, currentUserId }
                   <div className="text-sm font-medium text-gray-800 truncate">
                     {r.name}{r.isMe && <span className="text-xs text-green-600 ml-1">（自分）</span>}
                   </div>
-                  <div className="text-xs text-gray-400">{r.outings}回出猟 / {r.rPerGame}発/頭</div>
+                  <div className="text-xs text-gray-400">{r.outings}回出猟 / {r.gamePerOuting}頭/出猟</div>
                 </div>
                 <div className="text-right shrink-0">
                   <div className="text-lg font-bold text-green-600">{r.game}<span className="text-xs text-gray-400 font-normal">頭</span></div>
@@ -752,58 +840,6 @@ function CompareTab({ allShooting, allHunting, profiles, period, currentUserId }
           </div>
         </ChartCard>
       </div>
-
-      {/* スコア比較折れ線 */}
-      <ChartCard title="📈 メンバー別スコア推移（月別平均）" empty={multiLineData.length < 2 || usersWithScores.length === 0}>
-        <ResponsiveContainer width="100%" height={260}>
-          <LineChart data={multiLineData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis dataKey="month" tick={{ fontSize: 10 }} />
-            <YAxis domain={['auto', 'auto']} tick={{ fontSize: 11 }} />
-            <Tooltip formatter={(v, k) => [`${v}点`, profileMap[k] || k]} />
-            <Legend formatter={k => profileMap[k] || k} />
-            {usersWithScores.map((uid, i) => (
-              <Line key={uid} type="monotone" dataKey={uid}
-                stroke={USER_COLORS[i % USER_COLORS.length]} strokeWidth={uid === currentUserId ? 3 : 1.5}
-                dot={{ r: 3 }} connectNulls />
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
-      </ChartCard>
-
-      {/* スコア比較バー */}
-      {shootingRanking.length > 0 && (
-        <ChartCard title="📊 平均スコア比較">
-          <ResponsiveContainer width="100%" height={Math.max(160, shootingRanking.length * 44)}>
-            <BarChart data={shootingRanking.map(r => ({ name: r.name, avg: Number(r.avg), best: r.best, isMe: r.isMe }))} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis type="number" domain={['auto', 'auto']} tick={{ fontSize: 11 }} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} width={80} />
-              <Tooltip formatter={v => [`${v}点`, '']} />
-              <Legend />
-              <Bar dataKey="avg" name="平均スコア" radius={[0, 4, 4, 0]}
-                fill="#3b82f6" />
-              <Bar dataKey="best" name="自己ベスト" radius={[0, 4, 4, 0]}
-                fill="#93c5fd" />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
-      )}
-
-      {/* 弾薬消費ランキング */}
-      {ammoRanking.length > 0 && (
-        <ChartCard title="💥 弾薬消費ランキング（射撃記録より）">
-          <ResponsiveContainer width="100%" height={Math.max(120, ammoRanking.length * 44)}>
-            <BarChart data={ammoRanking} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis type="number" tick={{ fontSize: 11 }} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} width={80} />
-              <Tooltip formatter={v => [`${v}発`, '消費弾数']} />
-              <Bar dataKey="rounds" name="消費弾数（発）" fill="#f59e0b" radius={[0, 4, 4, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
-      )}
     </div>
   )
 }
@@ -820,6 +856,8 @@ export default function Statistics() {
   const [profiles, setProfiles] = useState([])
   const [allShooting, setAllShooting] = useState([])
   const [allHunting, setAllHunting] = useState([])
+  const [teams, setTeams] = useState([])
+  const [teamMembers, setTeamMembers] = useState({})
   const [loading, setLoading] = useState(true)
 
   const [activeTab, setActiveTab] = useState('shooting')
@@ -828,7 +866,7 @@ export default function Statistics() {
 
   useEffect(() => {
     async function fetchAll() {
-      const [pRes, sRes, hRes] = await Promise.all([
+      const [pRes, sRes, hRes, tmRes] = await Promise.all([
         supabase.from('profiles').select('id, display_name'),
         supabase.from('shooting_records')
           .select('user_id, date, score, rounds, firearm, caliber, ammo_name, discipline, location, score_detail')
@@ -836,10 +874,28 @@ export default function Statistics() {
         supabase.from('hunting_records')
           .select('user_id, date, game, count, method, rounds_fired, ground_id, location, weather, departure_time, hunting_grounds(name)')
           .order('date'),
+        supabase.from('team_members')
+          .select('team_id, user_id, role, hunting_teams(id, name)')
+          .eq('user_id', user.id),
       ])
       setProfiles(pRes.data || [])
       setAllShooting(sRes.data || [])
       setAllHunting((hRes.data || []).map(r => ({ ...r, ground_name: r.hunting_grounds?.name || null })))
+
+      // ユーザーが所属する猟隊を取得
+      const myTeams = (tmRes.data || [])
+        .filter(m => m.hunting_teams)
+        .map(m => ({ id: m.hunting_teams.id, name: m.hunting_teams.name }))
+      setTeams(myTeams)
+
+      // 各猟隊のメンバーを取得
+      const membersMap = {}
+      await Promise.all(myTeams.map(async t => {
+        const { data } = await supabase.rpc('get_team_members_by_team', { p_team_id: t.id })
+        membersMap[t.id] = data || []
+      }))
+      setTeamMembers(membersMap)
+
       setLoading(false)
     }
     fetchAll()
@@ -937,6 +993,8 @@ export default function Statistics() {
           profiles={profiles}
           period={period}
           currentUserId={user.id}
+          teams={teams}
+          teamMembers={teamMembers}
         />
       )}
     </div>
