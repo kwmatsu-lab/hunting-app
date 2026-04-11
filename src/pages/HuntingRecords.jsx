@@ -924,7 +924,10 @@ export default function HuntingRecords() {
             const huntTypeStyle = HUNT_TYPE_STYLE[r.method] || 'bg-gray-100 text-gray-600'
 
             return (
-              <div key={r.id} className={`bg-white rounded-xl border shadow-sm overflow-hidden ${isTeamRecord ? 'border-purple-200' : 'border-gray-100'}`}>
+              <div key={r.id}
+                className={`bg-white rounded-xl border shadow-sm overflow-hidden transition-all ${
+                  isExpanded ? 'border-green-200 shadow-md' : isTeamRecord ? 'border-purple-200' : 'border-gray-100'
+                }`}>
                 {/* チーム記録バナー */}
                 {isTeamRecord && (
                   <div className="bg-purple-50 px-4 py-1.5 flex items-center gap-1.5 text-xs text-purple-700">
@@ -932,42 +935,55 @@ export default function HuntingRecords() {
                   </div>
                 )}
 
-                <div className="p-4">
+                {/* クリッカブルヘッダー */}
+                <div
+                  className="p-4 cursor-pointer select-none hover:bg-gray-50"
+                  onClick={() => toggleExpand(r.id)}>
                   <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-semibold text-gray-800">{r.date}</span>
-                        {r.groundName && (
-                          <span className="flex items-center gap-0.5 text-xs text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
-                            <MapPin size={10} /> {r.groundName}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-semibold text-gray-800">{r.date}</span>
+                          {r.groundName && (
+                            <span className="flex items-center gap-0.5 text-xs text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
+                              <MapPin size={10} /> {r.groundName}
+                            </span>
+                          )}
+                          {r.teamName && (
+                            <span className="flex items-center gap-0.5 text-xs text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full">
+                              <Users2 size={10} /> {r.teamName}
+                            </span>
+                          )}
+                          {r.game && <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full">{r.game} {r.count ? `${r.count}頭` : ''}</span>}
+                          {r.roundsFired > 0 && <span className="bg-amber-100 text-amber-700 text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5"><Crosshair size={10} /> {r.roundsFired}発</span>}
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <span className="text-[10px] text-green-500 mr-1 flex items-center gap-0.5">
+                            {isExpanded ? <ChevronUp size={13}/> : <ChevronDown size={13}/>}
+                            {isExpanded ? '閉じる' : '詳細'}
                           </span>
-                        )}
-                        {r.teamName && (
-                          <span className="flex items-center gap-0.5 text-xs text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full">
-                            <Users2 size={10} /> {r.teamName}
-                          </span>
-                        )}
-                        {duration && <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">⏱ {duration}</span>}
-                        {(r.temperatureMin != null || r.temperatureMax != null) && (
-                          <span className="text-xs text-gray-500">
-                            🌡 {r.temperatureMin != null && r.temperatureMax != null
-                              ? `${r.temperatureMin}〜${r.temperatureMax}°C`
-                              : r.temperatureMin != null ? `最低 ${r.temperatureMin}°C`
-                              : `最高 ${r.temperatureMax}°C`}
-                          </span>
-                        )}
+                          {!isTeamRecord && (
+                            <>
+                              <button onClick={e => { e.stopPropagation(); setEditing(r) }}
+                                className="p-2 text-gray-400 hover:text-green-600 rounded-lg hover:bg-green-50">
+                                <Pencil size={15} />
+                              </button>
+                              <button onClick={e => { e.stopPropagation(); remove(r.id) }}
+                                className="p-2 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50">
+                                <Trash2 size={15} />
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
 
                       <div className="flex gap-2 mt-1.5 flex-wrap">
-                        {/* 狩猟種別タグ */}
                         {r.method && (
                           <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${huntTypeStyle}`}>{r.method}</span>
                         )}
                         {r.isPestControl && (
                           <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-700">有害駆除</span>
                         )}
-                        {r.game && <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full">{r.game} {r.count ? `${r.count}頭` : ''}</span>}
-                        {r.roundsFired > 0 && <span className="bg-amber-100 text-amber-700 text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5"><Crosshair size={10} /> {r.roundsFired}発</span>}
                         {r.count > 0 && r.roundsFired > 0 && <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full">{(r.roundsFired / r.count).toFixed(1)}発/頭</span>}
                         {r.firearmName && (
                           <span className="flex items-center gap-0.5 bg-orange-50 text-orange-700 text-xs px-2 py-0.5 rounded-full border border-orange-100">
@@ -977,21 +993,18 @@ export default function HuntingRecords() {
                       </div>
 
                       <div className="mt-1.5 flex gap-3 text-xs text-gray-400 flex-wrap">
+                        {duration && <span>⏱ {duration}</span>}
                         {r.weather && <span>{r.weather}</span>}
+                        {(r.temperatureMin != null || r.temperatureMax != null) && (
+                          <span>
+                            🌡 {r.temperatureMin != null && r.temperatureMax != null
+                              ? `${r.temperatureMin}〜${r.temperatureMax}°C`
+                              : r.temperatureMin != null ? `最低 ${r.temperatureMin}°C`
+                              : `最高 ${r.temperatureMax}°C`}
+                          </span>
+                        )}
                         {(r.ammoName || r.ammoUsed) && <span>装弾: {r.ammoName || r.ammoUsed}</span>}
                       </div>
-                    </div>
-
-                    <div className="flex gap-1 ml-2">
-                      <button onClick={() => toggleExpand(r.id)} className="p-2 text-gray-400 hover:text-green-600 rounded-lg hover:bg-green-50">
-                        {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-                      </button>
-                      {!isTeamRecord && (
-                        <>
-                          <button onClick={() => setEditing(r)} className="p-2 text-gray-400 hover:text-green-600 rounded-lg hover:bg-green-50"><Pencil size={15} /></button>
-                          <button onClick={() => remove(r.id)} className="p-2 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50"><Trash2 size={15} /></button>
-                        </>
-                      )}
                     </div>
                   </div>
                   {r.notes && <div className="mt-2 text-xs text-gray-500 bg-gray-50 rounded px-2 py-1">{r.notes}</div>}
