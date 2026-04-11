@@ -185,6 +185,7 @@ function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, fire
     groundId: '', roundsFired: '', ammoInventoryId: '',
     departureTime: '', returnTime: '', temperatureMin: '', temperatureMax: '',
     teamId: '', firearmId: '',
+    catchTime: '', catchLocation: '', shooterUserId: '',
     latitude: null, longitude: null,
     ...initial,
     groundId: initial?.groundId || '',
@@ -207,6 +208,8 @@ function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, fire
   const [teamMembers, setTeamMembers] = useState([])
   const [deductAmmo, setDeductAmmo] = useState(false)
   const [showMapPicker, setShowMapPicker] = useState(!!(initial?.latitude))
+  const [showHuntDetail, setShowHuntDetail] = useState(!!(initial?.prefecture || initial?.location || initial?.departureTime || initial?.returnTime || initial?.temperatureMin || initial?.temperatureMax || initial?.weather))
+  const [showCatchDetail, setShowCatchDetail] = useState(!!(initial?.catchTime || initial?.catchLocation))
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
 
@@ -316,104 +319,120 @@ function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, fire
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* 日付・猟場 */}
-      <div className="grid grid-cols-2 gap-3">
-        <label className="block">
-          <span className="text-xs text-gray-500 font-medium">日付 *</span>
-          <input type="date" required value={form.date} onChange={e => set('date', e.target.value)}
-            className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" />
-        </label>
-        <label className="block">
-          <span className="text-xs text-gray-500 font-medium">猟場</span>
-          <select value={form.groundId} onChange={e => handleGroundChange(e.target.value)}
-            className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-            <option value="">登録猟場から選択</option>
-            {grounds.map(g => <option key={g.id} value={g.id}>{g.name}{g.prefecture ? ` (${g.prefecture})` : ''}</option>)}
-          </select>
-        </label>
-      </div>
-
-      {/* 出猟情報エリア */}
+      {/* 出猟情報 */}
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3">
         <div className="text-xs font-semibold text-blue-800 flex items-center gap-1.5"><Clock size={13} /> 出猟情報</div>
+
+        {/* サマリー: 日付・猟場（常に表示） */}
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
-            <span className="text-xs text-gray-500 font-medium">都道府県</span>
-            <input type="text" placeholder="北海道" value={form.prefecture} onChange={e => set('prefecture', e.target.value)}
-              className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+            <span className="text-xs text-gray-500 font-medium">日付 *</span>
+            <input type="date" required value={form.date} onChange={e => set('date', e.target.value)}
+              className="mt-1 w-full border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-400" />
           </label>
           <label className="block">
-            <span className="text-xs text-gray-500 font-medium">場所（自由記入）</span>
-            <input type="text" placeholder="〇〇山系" value={form.location} onChange={e => set('location', e.target.value)}
-              className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+            <span className="text-xs text-gray-500 font-medium">猟場</span>
+            <select value={form.groundId} onChange={e => handleGroundChange(e.target.value)}
+              className="mt-1 w-full border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+              <option value="">登録猟場から選択</option>
+              {grounds.map(g => <option key={g.id} value={g.id}>{g.name}{g.prefecture ? ` (${g.prefecture})` : ''}</option>)}
+            </select>
           </label>
-          <label className="block">
-            <span className="text-xs text-gray-500 font-medium">出発時刻</span>
-            <input type="time" value={form.departureTime} onChange={e => set('departureTime', e.target.value)}
-              className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
-          </label>
-          <label className="block">
-            <span className="text-xs text-gray-500 font-medium">帰還時刻</span>
-            <input type="time" value={form.returnTime} onChange={e => set('returnTime', e.target.value)}
-              className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
-          </label>
-          <label className="block">
-            <span className="text-xs text-gray-500 font-medium">気温 — 最低 (°C)</span>
-            <input type="number" step="0.5" placeholder="-5" value={form.temperatureMin} onChange={e => set('temperatureMin', e.target.value)}
-              className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
-          </label>
-          <label className="block">
-            <span className="text-xs text-gray-500 font-medium">気温 — 最高 (°C)</span>
-            <input type="number" step="0.5" placeholder="5" value={form.temperatureMax} onChange={e => set('temperatureMax', e.target.value)}
-              className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
-          </label>
-          <div className="block col-span-2">
-            <span className="text-xs text-gray-500 font-medium">天候</span>
-            <div className="flex flex-wrap gap-2 mt-1.5">
-              {WEATHER_OPTIONS.map(w => (
-                <button key={w} type="button" onClick={() => set('weather', form.weather === w ? '' : w)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-all ${
-                    form.weather === w
-                      ? 'bg-blue-100 text-blue-700 border-transparent ring-2 ring-offset-1 ring-blue-400'
-                      : 'border-gray-200 text-gray-500 hover:border-gray-300 bg-white'
-                  }`}>
-                  {w}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
-      </div>
 
-      {/* 出猟地点マップ */}
-      <div className="border border-gray-200 rounded-xl overflow-hidden">
-        <button type="button"
-          onClick={() => setShowMapPicker(v => !v)}
-          className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 hover:bg-gray-100 text-sm font-medium text-gray-700 transition-colors">
-          <span className="flex items-center gap-2">
-            <Map size={14} className="text-green-600" />
-            出猟地点を地図で指定
-            {form.latitude && form.longitude && (
-              <span className="text-xs font-mono text-green-700 bg-green-100 px-1.5 py-0.5 rounded">
-                {Number(form.latitude).toFixed(4)}, {Number(form.longitude).toFixed(4)}
-              </span>
-            )}
+        {/* 詳細トグル */}
+        <button type="button" onClick={() => setShowHuntDetail(v => !v)}
+          className="w-full flex items-center justify-between px-3 py-1.5 bg-blue-100/60 hover:bg-blue-100 rounded-lg text-xs font-medium text-blue-700 transition-colors">
+          <span className="flex items-center gap-1.5">
+            {showHuntDetail ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+            詳細情報（場所・時刻・天候など）
           </span>
-          {showMapPicker ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          <span className="text-blue-400 text-[10px]">任意</span>
         </button>
-        {showMapPicker && (
-          <div className="p-2">
-            <MapPicker
-              lat={form.latitude} lng={form.longitude}
-              onPick={(lat, lng) => { set('latitude', lat); set('longitude', lng) }}
-            />
-            {form.latitude && form.longitude && (
+
+        {/* 詳細: 都道府県・場所・時刻・気温・天候・マップ */}
+        {showHuntDetail && (
+          <div className="space-y-3 border-t border-blue-200 pt-3">
+            <div className="grid grid-cols-2 gap-3">
+              <label className="block">
+                <span className="text-xs text-gray-500 font-medium">都道府県</span>
+                <input type="text" placeholder="北海道" value={form.prefecture} onChange={e => set('prefecture', e.target.value)}
+                  className="mt-1 w-full border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-400" />
+              </label>
+              <label className="block">
+                <span className="text-xs text-gray-500 font-medium">場所（自由記入）</span>
+                <input type="text" placeholder="〇〇山系" value={form.location} onChange={e => set('location', e.target.value)}
+                  className="mt-1 w-full border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-400" />
+              </label>
+              <label className="block">
+                <span className="text-xs text-gray-500 font-medium">出発時刻</span>
+                <input type="time" value={form.departureTime} onChange={e => set('departureTime', e.target.value)}
+                  className="mt-1 w-full border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-400" />
+              </label>
+              <label className="block">
+                <span className="text-xs text-gray-500 font-medium">帰還時刻</span>
+                <input type="time" value={form.returnTime} onChange={e => set('returnTime', e.target.value)}
+                  className="mt-1 w-full border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-400" />
+              </label>
+              <label className="block">
+                <span className="text-xs text-gray-500 font-medium">気温 — 最低 (°C)</span>
+                <input type="number" step="0.5" placeholder="-5" value={form.temperatureMin} onChange={e => set('temperatureMin', e.target.value)}
+                  className="mt-1 w-full border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-400" />
+              </label>
+              <label className="block">
+                <span className="text-xs text-gray-500 font-medium">気温 — 最高 (°C)</span>
+                <input type="number" step="0.5" placeholder="5" value={form.temperatureMax} onChange={e => set('temperatureMax', e.target.value)}
+                  className="mt-1 w-full border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-400" />
+              </label>
+              <div className="block col-span-2">
+                <span className="text-xs text-gray-500 font-medium">天候</span>
+                <div className="flex flex-wrap gap-2 mt-1.5">
+                  {WEATHER_OPTIONS.map(w => (
+                    <button key={w} type="button" onClick={() => set('weather', form.weather === w ? '' : w)}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-all ${
+                        form.weather === w
+                          ? 'bg-blue-100 text-blue-700 border-transparent ring-2 ring-offset-1 ring-blue-400'
+                          : 'border-gray-200 text-gray-500 hover:border-gray-300 bg-white'
+                      }`}>
+                      {w}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* 出猟地点マップ */}
+            <div className="border border-blue-200 rounded-lg overflow-hidden">
               <button type="button"
-                onClick={() => { set('latitude', null); set('longitude', null) }}
-                className="mt-1.5 text-xs text-red-400 hover:text-red-600">
-                地点をクリア
+                onClick={() => setShowMapPicker(v => !v)}
+                className="w-full flex items-center justify-between px-3 py-2 bg-white/60 hover:bg-white text-xs font-medium text-gray-700 transition-colors">
+                <span className="flex items-center gap-2">
+                  <Map size={13} className="text-green-600" />
+                  出猟地点を地図で指定
+                  {form.latitude && form.longitude && (
+                    <span className="text-[10px] font-mono text-green-700 bg-green-100 px-1.5 py-0.5 rounded">
+                      {Number(form.latitude).toFixed(4)}, {Number(form.longitude).toFixed(4)}
+                    </span>
+                  )}
+                </span>
+                {showMapPicker ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
               </button>
-            )}
+              {showMapPicker && (
+                <div className="p-2">
+                  <MapPicker
+                    lat={form.latitude} lng={form.longitude}
+                    onPick={(lat, lng) => { set('latitude', lat); set('longitude', lng) }}
+                  />
+                  {form.latitude && form.longitude && (
+                    <button type="button"
+                      onClick={() => { set('latitude', null); set('longitude', null) }}
+                      className="mt-1.5 text-xs text-red-400 hover:text-red-600">
+                      地点をクリア
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -555,6 +574,37 @@ function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, fire
                       className="w-9 h-9 rounded-full border border-green-300 text-green-700 hover:bg-green-100 flex items-center justify-center text-lg font-bold transition-colors">+</button>
                   </div>
                 </div>
+                {/* 射手（チーム時は常に表示） */}
+                {form.teamId && teamMembers.length > 0 && (
+                  <div>
+                    <span className="text-xs text-gray-500 font-medium">射手</span>
+                    <select value={form.shooterUserId || ''} onChange={e => set('shooterUserId', e.target.value)}
+                      className="mt-1 w-full border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-400 text-purple-600">
+                      <option value="">射手を選択</option>
+                      {teamMembers.map(m => (
+                        <option key={m.userId} value={m.userId}>{m.displayName}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* 詳細（時刻・場所）トグル */}
+                <button type="button" onClick={() => setShowCatchDetail(v => !v)}
+                  className="w-full flex items-center justify-between px-3 py-1.5 bg-green-100/60 hover:bg-green-100 rounded-lg text-xs font-medium text-green-700 transition-colors">
+                  <span className="flex items-center gap-1.5">
+                    {showCatchDetail ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                    詳細情報（時刻・場所）
+                  </span>
+                  <span className="text-green-400 text-[10px]">任意</span>
+                </button>
+                {showCatchDetail && (
+                  <div className="flex items-center gap-2 flex-wrap border-t border-green-200 pt-2">
+                    <input type="time" value={form.catchTime || ''} onChange={e => set('catchTime', e.target.value)}
+                      className="border border-gray-200 rounded-md bg-white text-xs font-mono w-20 px-1.5 py-1 focus:outline-none shrink-0" />
+                    <input type="text" placeholder="捕獲場所（任意）" value={form.catchLocation || ''} onChange={e => set('catchLocation', e.target.value)}
+                      className="border border-gray-200 rounded-md bg-white text-xs px-1.5 py-1 focus:outline-none flex-1 min-w-[100px]" />
+                  </div>
+                )}
               </div>
             )}
             {catches.length > 0 && (
@@ -565,8 +615,8 @@ function RecordForm({ initial, onSave, onCancel, grounds, ammoItems, teams, fire
               + 捕獲を追加
             </button>
             {catches.length === 0 && (
-              <div className="text-[10px] text-gray-400 text-center flex items-center justify-center gap-1">
-                <Clock size={10} /> 捕獲を追加すると、時刻・場所・射手を個別に記録できます
+              <div className="text-[10px] text-gray-400 text-center">
+                複数の捕獲を個別に記録する場合は「捕獲を追加」を使用
               </div>
             )}
           </>
