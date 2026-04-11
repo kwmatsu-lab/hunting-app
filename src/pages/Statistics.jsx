@@ -830,7 +830,7 @@ function CompareTab({ allShooting, allHunting, profiles, period, currentUserId, 
                   <div className="text-sm font-medium text-gray-800 truncate">
                     {r.name}{r.isMe && <span className="text-xs text-green-600 ml-1">（自分）</span>}
                   </div>
-                  <div className="text-xs text-gray-400">{r.outings}回出猟 / {r.gamePerOuting}頭/出猟</div>
+                  <div className="text-xs text-gray-400">{r.outings}回出猟</div>
                 </div>
                 <div className="text-right shrink-0">
                   <div className="text-lg font-bold text-green-600">{r.game}<span className="text-xs text-gray-400 font-normal">頭</span></div>
@@ -839,6 +839,20 @@ function CompareTab({ allShooting, allHunting, profiles, period, currentUserId, 
             ))}
           </div>
         </ChartCard>
+
+        {huntingRanking.length > 0 && (
+          <ChartCard title="📊 出猟あたり獲得数">
+            <ResponsiveContainer width="100%" height={Math.max(120, huntingRanking.length * 44)}>
+              <BarChart data={huntingRanking.map(r => ({ name: r.name, gamePerOuting: Number(r.gamePerOuting) || 0 }))} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis type="number" tick={{ fontSize: 11 }} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} width={80} />
+                <Tooltip formatter={v => [`${v}頭/出猟`, '獲得効率']} />
+                <Bar dataKey="gamePerOuting" name="頭/出猟" fill="#10b981" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        )}
       </div>
     </div>
   )
