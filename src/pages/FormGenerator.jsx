@@ -258,7 +258,7 @@ export default function FormGenerator() {
       id: 'usage-report',
       title: '使用実績報告書',
       description: '第74号様式（第94条関係）— 銃砲の使用実績を公安委員会に報告する書類',
-      available: true,
+      available: false,
     },
     {
       id: 'permit-renewal',
