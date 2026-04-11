@@ -1,34 +1,123 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import {
   Target, TreePine, Package, FileCheck, LayoutDashboard,
-  BarChart2, MapPin, Settings, Menu, X, LogOut, Users2, Shield, Crosshair, FileText
+  BarChart2, MapPin, Settings, Menu, X, LogOut, Users2, Shield, Crosshair, FileText,
+  ChevronDown, ChevronRight, Folder
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '../context/AuthContext'
 
-function useNavItems() {
+function useNavStructure() {
   const { isAdmin } = useAuth()
-  const base = [
-    { to: '/',          icon: LayoutDashboard, label: 'ダッシュボード' },
-    { to: '/shooting',  icon: Target,           label: '射撃記録' },
-    { to: '/ranges',    icon: Crosshair,        label: '射撃場管理' },
-    { to: '/hunting',   icon: TreePine,         label: '狩猟記録' },
-    { to: '/grounds',   icon: MapPin,           label: '猟場管理' },
-    { to: '/teams',     icon: Users2,           label: '猟隊管理' },
-    { to: '/ammo',      icon: Package,          label: '実包管理' },
-    { to: '/licenses',  icon: FileCheck,        label: '免許・許可証' },
-    { to: '/forms',     icon: FileText,         label: '申請様式作成' },
-    { to: '/stats',     icon: BarChart2,        label: '統計・分析' },
-    { to: '/settings',  icon: Settings,         label: '設定' },
-  ]
-  if (isAdmin) base.push({ to: '/admin', icon: Shield, label: '管理者', admin: true })
-  return base
+  return useMemo(() => {
+    const structure = [
+      { type: 'link', to: '/', icon: LayoutDashboard, label: 'ダッシュボード' },
+      {
+        type: 'group', key: 'shooting', icon: Target, label: '射撃',
+        defaultOpen: true,
+        routes: ['/shooting', '/ranges'],
+        children: [
+          { to: '/shooting', icon: Target,    label: '射撃記録' },
+          { to: '/ranges',   icon: Crosshair, label: '射撃場管理' },
+        ],
+      },
+      {
+        type: 'group', key: 'hunting', icon: TreePine, label: '狩猟',
+        defaultOpen: true,
+        routes: ['/hunting', '/grounds', '/teams'],
+        children: [
+          { to: '/hunting', icon: TreePine, label: '狩猟記録' },
+          { to: '/grounds', icon: MapPin,   label: '猟場管理' },
+          { to: '/teams',   icon: Users2,   label: '猟隊管理' },
+        ],
+      },
+      {
+        type: 'group', key: 'other', icon: Folder, label: 'その他',
+        routes: ['/ammo', '/licenses', '/forms'],
+        children: [
+          { to: '/ammo',     icon: Package,   label: '実包管理' },
+          { to: '/licenses', icon: FileCheck,  label: '免許・許可証' },
+          { to: '/forms',    icon: FileText,   label: '申請様式作成' },
+        ],
+      },
+      { type: 'link', to: '/stats',    icon: BarChart2, label: '統計・分析' },
+      { type: 'link', to: '/settings', icon: Settings,  label: '設定' },
+    ]
+    if (isAdmin) structure.push({ type: 'link', to: '/admin', icon: Shield, label: '管理者', admin: true })
+    return structure
+  }, [isAdmin])
 }
 
+// ── ナビリンク（単体） ───────────────────────────
+function NavItem({ to, icon: Icon, label, admin, onClick, mobile }) {
+  return (
+    <NavLink
+      to={to}
+      end={to === '/'}
+      onClick={onClick}
+      className={({ isActive }) =>
+        `flex items-center gap-3 ${mobile ? 'px-4 py-3 text-base' : 'px-3 py-2.5 text-sm'} rounded-lg mb-0.5 transition-all ${
+          isActive
+            ? admin
+              ? 'bg-red-500/20 border-l-2 border-red-400 text-red-300 font-semibold pl-[10px]'
+              : 'bg-emerald-500/15 border-l-2 border-emerald-400 text-emerald-300 font-semibold pl-[10px]'
+            : admin
+              ? 'text-red-400/80 hover:bg-white/5 hover:text-red-300'
+              : 'text-stone-400 hover:bg-white/8 hover:text-stone-200'
+        }`
+      }
+    >
+      <Icon size={mobile ? 19 : 16} className="shrink-0" />
+      {label}
+    </NavLink>
+  )
+}
+
+// ── ナビグループ（折りたたみ） ───────────────────
+function NavGroup({ item, mobile, onClick }) {
+  const location = useLocation()
+  const isChildActive = item.routes.some(r => location.pathname === r)
+  const [open, setOpen] = useState(isChildActive || !!item.defaultOpen)
+
+  // パスが変わったら自動展開
+  useEffect(() => {
+    if (isChildActive) setOpen(true)
+  }, [isChildActive])
+
+  const Icon = item.icon
+  return (
+    <div className="mb-0.5">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className={`w-full flex items-center gap-3 ${mobile ? 'px-4 py-3 text-base' : 'px-3 py-2.5 text-sm'} rounded-lg transition-all ${
+          isChildActive
+            ? 'text-emerald-300 font-semibold'
+            : 'text-stone-400 hover:bg-white/8 hover:text-stone-200'
+        }`}
+      >
+        <Icon size={mobile ? 19 : 16} className="shrink-0" />
+        <span className="flex-1 text-left">{item.label}</span>
+        {open
+          ? <ChevronDown size={mobile ? 16 : 13} className="text-stone-500" />
+          : <ChevronRight size={mobile ? 16 : 13} className="text-stone-500" />
+        }
+      </button>
+      {open && (
+        <div className={mobile ? 'pl-4' : 'pl-3'}>
+          {item.children.map(child => (
+            <NavItem key={child.to} {...child} onClick={onClick} mobile={mobile} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── レイアウト ────────────────────────────────────
 export default function Layout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const { profile, signOut } = useAuth()
-  const navItems = useNavItems()
+  const navStructure = useNavStructure()
 
   const initial = (profile?.display_name || '?')[0].toUpperCase()
 
@@ -54,27 +143,11 @@ export default function Layout({ children }) {
 
         {/* ナビゲーション */}
         <nav className="flex-1 py-4 overflow-y-auto px-2">
-          {navItems.map(({ to, icon: Icon, label, admin }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === '/'}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm mb-0.5 transition-all ${
-                  isActive
-                    ? admin
-                      ? 'bg-red-500/20 border-l-2 border-red-400 text-red-300 font-semibold pl-[10px]'
-                      : 'bg-emerald-500/15 border-l-2 border-emerald-400 text-emerald-300 font-semibold pl-[10px]'
-                    : admin
-                      ? 'text-red-400/80 hover:bg-white/5 hover:text-red-300'
-                      : 'text-stone-400 hover:bg-white/8 hover:text-stone-200'
-                }`
-              }
-            >
-              <Icon size={16} className="shrink-0" />
-              {label}
-            </NavLink>
-          ))}
+          {navStructure.map(item =>
+            item.type === 'group'
+              ? <NavGroup key={item.key} item={item} />
+              : <NavItem key={item.to} {...item} />
+          )}
         </nav>
 
         {/* ユーザーセクション */}
@@ -136,28 +209,11 @@ export default function Layout({ children }) {
             </div>
           </div>
           <nav className="px-2 py-3">
-            {navItems.map(({ to, icon: Icon, label, admin }) => (
-              <NavLink
-                key={to}
-                to={to}
-                end={to === '/'}
-                onClick={() => setMobileOpen(false)}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-3 rounded-lg mb-0.5 text-base transition-all ${
-                    isActive
-                      ? admin
-                        ? 'bg-red-500/20 border-l-2 border-red-400 text-red-300 font-semibold pl-[14px]'
-                        : 'bg-emerald-500/15 border-l-2 border-emerald-400 text-emerald-300 font-semibold pl-[14px]'
-                      : admin
-                        ? 'text-red-400/80 hover:bg-white/5 hover:text-red-300'
-                        : 'text-stone-400 hover:bg-white/8 hover:text-stone-200'
-                  }`
-                }
-              >
-                <Icon size={19} />
-                {label}
-              </NavLink>
-            ))}
+            {navStructure.map(item =>
+              item.type === 'group'
+                ? <NavGroup key={item.key} item={item} mobile onClick={() => setMobileOpen(false)} />
+                : <NavItem key={item.to} {...item} mobile onClick={() => setMobileOpen(false)} />
+            )}
           </nav>
           <div className="px-6 py-3 border-t border-white/10">
             <button onClick={signOut} className="flex items-center gap-3 py-2 text-stone-400 hover:text-white transition-colors text-sm">
